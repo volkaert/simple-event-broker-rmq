@@ -43,11 +43,6 @@ public class ProbeService {
     public synchronized void publishProbeEvent() {
         Instant publicationStart = Instant.now();
 
-        String publicationUrl = config.getPublicationUrl() + "/events";
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
         ProbeEvent event = new ProbeEvent();
         event.setBusinessId(UUID.randomUUID().toString());
         event.setPublicationCode(config.getPublicationCode());
@@ -57,10 +52,12 @@ public class ProbeService {
         lastProbeEventPublished = event;
         lastProbeEventPublicationDate = Instant.now();
 
-        HttpEntity<ProbeEvent> request = new HttpEntity<>(event, httpHeaders);
-
         telemetryService.probePublicationAttempted(event);
         try {
+            String publicationUrl = config.getPublicationUrl() + "/events";
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<ProbeEvent> request = new HttpEntity<>(event, httpHeaders);
             ResponseEntity<ProbeEvent> response = restTemplate.exchange(publicationUrl, HttpMethod.POST, request, ProbeEvent.class);
             if (response.getStatusCode().is2xxSuccessful())
                 telemetryService.probePublicationSucceeded(response.getBody(), publicationStart);
