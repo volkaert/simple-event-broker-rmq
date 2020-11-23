@@ -1,0 +1,24 @@
+package fr.volkaert.event_broker.probe.telemetry;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class TelemetryConfig {
+
+    @Value("${probe.component-type-name}")
+    String componentTypeName;
+
+    @Value("${probe.component-instance-id}")
+    String componentInstanceId;
+
+    @Bean
+    MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
+        return registry -> registry.config()
+                .commonTags("component_type_name", componentTypeName)
+                .commonTags("component_instance_id", componentInstanceId);
+    }
+}

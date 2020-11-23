@@ -1,0 +1,32 @@
+server:
+  port : 8081
+spring:
+  application:
+    name: simple-event-broker-rmq-publication-gateway
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 2000
+        response-timeout: 10s
+      routes:
+        - id: publication-adapter
+          uri: lb://PublicationAdapter
+          predicates:
+          - Path=/events
+          filters:
+            - name: Retry
+              args:
+                retries: 12
+                methods: POST
+                exceptions: java.io.IOException
+                statuses: SERVICE_UNAVAILABLE,BAD_GATEWAY
+                backoff:
+                  firstBackoff: 5s
+                  maxBackoff: 60s
+                  factor: 1
+                  basedOnPreviousValue: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
