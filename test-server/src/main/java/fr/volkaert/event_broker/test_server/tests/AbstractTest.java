@@ -99,7 +99,7 @@ public abstract class AbstractTest {
         recordingService.addRecord(record);
     }
 
-    @GetMapping(value = "/stop", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/pub/stop", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> stop(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForPublishers testData = getTestDataForPublishers(testId);
@@ -108,7 +108,7 @@ public abstract class AbstractTest {
         return ResponseEntity.ok("Test " + testId + " will be stopped\n");
     }
 
-    @GetMapping(value = "/suspend", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/pub/suspend", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> suspend(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForPublishers testData = getTestDataForPublishers(testId);
@@ -116,7 +116,7 @@ public abstract class AbstractTest {
         return ResponseEntity.ok("Test " + testId + " has been suspended. Use the `resume` command to resume the test.\n");
     }
 
-    @GetMapping(value = "/resume", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/pub/resume", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> resume(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForPublishers testData = getTestDataForPublishers(testId);
@@ -124,7 +124,7 @@ public abstract class AbstractTest {
         return ResponseEntity.ok("Test " + testId + " has been resumed\n");
     }
 
-    @GetMapping(value = "/accept", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/sub/accept", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> accept(@RequestParam(required = false) String testId,
                                          @RequestParam(required = false, defaultValue = "201") int status,
                                          @RequestHeader HttpHeaders httpHeaders) {
@@ -134,7 +134,7 @@ public abstract class AbstractTest {
         return ResponseEntity.ok("Webhook will return " + testData.statusToReturnForWebhook + " for test " + testId + "\n");
     }
 
-    @GetMapping(value = "/reject", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/sub/reject", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> reject(@RequestParam(required = false) String testId,
                                          @RequestParam(required = false, defaultValue = "500") int status,
                                          @RequestHeader HttpHeaders httpHeaders) {
@@ -144,7 +144,7 @@ public abstract class AbstractTest {
         return ResponseEntity.ok("Webhook will return " + testData.statusToReturnForWebhook + " for test " + testId + "\n");
     }
 
-    @GetMapping(value = "/slowdown", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/sub/slowdown", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> slowdown(@RequestParam(required = false) String testId,
                                            @RequestParam(required = false, defaultValue = "10000") long pause,
                                            @RequestHeader HttpHeaders httpHeaders) {

@@ -24,7 +24,7 @@ public class NominalTest extends  AbstractTest {
     @Qualifier("ExecutorServiceForTests")
     ExecutorService executorService;
 
-    @GetMapping(value = "/run", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/pub/run", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> run(
             @RequestParam(required = false) String testId,
             @RequestParam(required = false) String publicationCode,

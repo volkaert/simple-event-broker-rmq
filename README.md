@@ -394,14 +394,14 @@ some `cron` utility).
 ### Commands
 
 The `TestServer` module accepts the following commands:
-- `run`: executes the test. Execution can be synchronous or asynchronous (for long running tests). You can specify how 
+- `pub/run`: executes the test. Execution can be synchronous or asynchronous (for long running tests). You can specify how 
   many events to publish and the pause (in millis) between each published event. 
-- `stop`: stops a given test or the last started test
-- `suspend`: suspends a given test or the last started test. Use the `resume` command to resume the test.
-- `resume`: resumes a given test or the last started test
-- `accept`: the webhook will return the provided status code or the default successful status code
-- `reject`: the webhook will return the provided status code or the default failure status code
-- `slowdown`: the webhook will slow down to simulate slow consumers
+- `pub/stop`: stops a given test or the last started test
+- `pub/suspend`: suspends a given test or the last started test. Use the `resume` command to resume the test.
+- `pub/resume`: resumes a given test or the last started test
+- `sub/accept`: the webhook will return the provided status code or the default successful status code
+- `sub/reject`: the webhook will return the provided status code or the default failure status code
+- `sub/slowdown`: the webhook will slow down to simulate slow consumers
   
 ### Test Event Payload
 
@@ -425,16 +425,16 @@ The `TestServer` module contains the following tests:
 ### Examples
 Examples (with the `nominal` test):
 ```
-curl http://localhost:8100/tests/nominal/run
-curl "http://localhost:8100/tests/nominal/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&sync=true"    
-curl http://localhost:8100/tests/nominal/stop
-curl "http://localhost:8100/tests/nominal/stop?testId=123456789"
-curl http://localhost:8100/tests/nominal/accept
-curl "http://localhost:8100/tests/nominal/accept?testId=123456789&status=201"
-curl http://localhost:8100/tests/nominal/reject
-curl "http://localhost:8100/tests/nominal/reject?testId=123456789&status=500"
-curl http://localhost:8100/tests/nominal/slowdown
-curl "http://localhost:8100/tests/nominal/slowdown?testId=123456789&pause=10000"
+curl http://localhost:8100/tests/nominal/pub/run
+curl "http://localhost:8100/tests/nominal/pub/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&sync=true"    
+curl http://localhost:8100/tests/nominal/pub/stop
+curl "http://localhost:8100/tests/nominal/pub/stop?testId=123456789"
+curl http://localhost:8100/tests/nominal/sub/accept
+curl "http://localhost:8100/tests/nominal/sub/accept?testId=123456789&status=201"
+curl http://localhost:8100/tests/nominal/sub/reject
+curl "http://localhost:8100/tests/nominal/sub/reject?testId=123456789&status=500"
+curl http://localhost:8100/tests/nominal/sub/slowdown
+curl "http://localhost:8100/tests/nominal/sub/slowdown?testId=123456789&pause=10000"
 ```
 
 
