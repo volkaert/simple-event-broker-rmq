@@ -136,6 +136,8 @@ public class NominalTest extends  AbstractTest {
         long eventRoundtripDurationInMillis = Duration.between(event.getPayload().getEventTimestamp(), Instant.now()).toMillis();
         testData.sumOfEventRoundtripDurationInMillis = testData.sumOfEventRoundtripDurationInMillis + eventRoundtripDurationInMillis;
 
+        telemetryService.recordEventRoundtripDuration(event, eventRoundtripDurationInMillis);
+
         if (event.getPayload().isLastEvent()) {
             if (event.getPayload().getExpectedCount() != testData.receivedEventsCount) {
                 TestRecord record = getTestRecord(event, testData.receivedEventsCount, testData.sumOfEventRoundtripDurationInMillis);

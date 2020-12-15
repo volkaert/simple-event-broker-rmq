@@ -2,9 +2,7 @@ package fr.volkaert.event_broker.test_server.telemetry;
 
 import fr.volkaert.event_broker.test_server.model.TestEvent;
 import fr.volkaert.event_broker.test_server.model.TestRecord;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -200,4 +198,14 @@ public class TelemetryService {
         }
         return msg;
     }
+
+    public synchronized void  recordEventRoundtripDuration(TestEvent event, long eventRoundtripDurationInMillis) {
+        try {
+            Timer roundtripDurationTimer = meterRegistry.timer("test_event_roundtrip_duration", Tags.of("testId", event.getPayload().getTestId()));
+            roundtripDurationTimer.record(eventRoundtripDurationInMillis, TimeUnit.MILLISECONDS);
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording metric for recordEventRoundtripDuration", ex);
+        }
+    }
+
 }
