@@ -380,6 +380,104 @@ curl --header "Content-Type: application/json" \
   http://localhost:8081/events
 ```
 
+
+
+## TestServer
+
+The `TestServer` module contains synthetic tests (tests that simulate actual publishers and subscribers).
+
+Instead of running tests from standalone tools/utilities/scripts, tests have been grouped in a microservice.
+Those tests can be triggered via a web browser (for manual tests) or from a `curl` command for automatic tests (
+automatic tests are typically grouped in one or several shell script(s) that is(are) executed at regular interval using 
+some `cron` utility).
+
+### Commands
+
+The `TestServer` module accepts the following commands:
+- `run`: executes the test. Execution can be synchronous or asynchronous (for long running tests). You can specify how 
+  many events to publish and the pause (in millis) between each published event. 
+- `stop`: stops a given test or the last started test
+- `suspend`: suspends a given test or the last started test. Use the `resume` command to resume the test.
+- `resume`: resumes a given test or the last started test
+- `accept`: the webhook will return the provided status code or the default successful status code
+- `reject`: the webhook will return the provided status code or the default failure status code
+- `slowdown`: the webhook will slow down to simulate slow consumers
+  
+### Test Event Payload
+
+Teh Test Event Payload contains the following attributes:
+- `String testId`: id of the test
+- `Instant testTimestamp`: timestamp of the test (start of the test)
+- `String message`: any message (e.g. "Hello World")
+- `Instant currentEventTimestamp`: timestamp of the current event of the test
+- `boolean isFirstEvent`: true if this event is the first event of the test
+- `boolean isLastEvent`: true if this event is the last event of the test
+- `Long expectedCount`: expected count of events. *Only present in the last event of the test*.
+- `Long index`: index of the current event (to check delivery order)
+  
+
+### Available Tests
+
+The `TestServer` module contains the following tests:
+- `nominal`: checks that all events are delivered and in the correct order. This tests uses a webhook at `/tests/nominal/webhook`.
+  
+
+### Examples
+Examples (with the `nominal` test):
+```
+curl http://localhost:8100/tests/nominal/run
+curl "http://localhost:8100/tests/nominal/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&sync=true"    
+curl http://localhost:8100/tests/nominal/stop
+curl "http://localhost:8100/tests/nominal/stop?testId=123456789"
+curl http://localhost:8100/tests/nominal/accept
+curl "http://localhost:8100/tests/nominal/accept?testId=123456789&status=201"
+curl http://localhost:8100/tests/nominal/reject
+curl "http://localhost:8100/tests/nominal/reject?testId=123456789&status=500"
+curl http://localhost:8100/tests/nominal/slowdown
+curl "http://localhost:8100/tests/nominal/slowdown?testId=123456789&pause=10000"
+```
+
+
+### Recordings
+
+The `TestServer` module records the results of the tests (useful to compare performance results before and after an 
+optimization or to detect performance degradation over time).
+
+To view those test records, go to `http://localhost:8100/tests/recordings` (the last test result is displayed at the top of the list).
+
+To view records for *failed* tests only, go to `http://localhost:8100/tests/recordings?status=failed`
+
+A Test Record contains the following attributes:
+- `String testId`
+- `Instant testTimestamp`
+- `boolean finished`
+- `boolean succeeded`
+- `String reasonIfFailed`
+- `Long durationInSeconds`
+- `Long averageRoundtripDurationInMillis`
+- `Long expectedCount`
+- `Long actualCount`
+- `String hostName`
+
+>Planned enhancements: filters with `from` and `to` (time range)...
+
+
+### Metrics
+
+The `TestServer` module generates the following metrics (at the `/actuator/prometheus` endpoint):
+- `test_started_total`
+- `test_succeeded_total`
+- `test_failed_total`
+- `test_stopped_total`
+- `test_event_publication_attempted_total`
+- `test_event_publication_succeeded_total`
+- `test_event_publication_failed_total`
+- `test_event_received_total`
+- `test_event_missing_or_unordered_total`
+- `test_event_counts_mismatch_total`
+
+
+
 ## Misc
 
 ### kill a process that runs on a given port
