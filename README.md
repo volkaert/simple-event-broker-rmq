@@ -473,6 +473,7 @@ The `TestServer` module generates the following metrics (at the `/actuator/prome
 - `test_event_publication_succeeded_total`
 - `test_event_publication_failed_total`
 - `test_event_received_total`
+- `test_event_roundtrip_duration`
 - `test_event_missing_or_unordered_total`
 - `test_event_counts_mismatch_total`
 

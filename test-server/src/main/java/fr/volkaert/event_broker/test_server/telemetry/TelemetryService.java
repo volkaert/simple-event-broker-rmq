@@ -97,7 +97,7 @@ public class TelemetryService {
             LOGGER.error("Error while recording log for publicationAttempted", ex);
         }
         try {
-            Counter counter1 = meterRegistry.counter("test_event_publication_attempted_total");
+            Counter counter1 = meterRegistry.counter("test_event_publication_attempted_total", Tags.of("testId", event.getPayload().getTestId()));
             counter1.increment();
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for publicationAttempted", ex);
@@ -114,11 +114,11 @@ public class TelemetryService {
             LOGGER.error("Error while recording log for publicationSucceeded", ex);
         }
         try {
-            Counter counter1 = meterRegistry.counter("test_event_publication_succeeded_total");
+            Counter counter1 = meterRegistry.counter("test_event_publication_succeeded_total", Tags.of("testId", event.getPayload().getTestId()));
             counter1.increment();
 
             Instant publicationEnd = Instant.now();
-            Timer publicationTimer = meterRegistry.timer("test_event_publication_duration");
+            Timer publicationTimer = meterRegistry.timer("test_event_publication_duration", Tags.of("testId", event.getPayload().getTestId()));
             publicationTimer.record(Duration.between(publicationStart, publicationEnd).toMillis(), TimeUnit.MILLISECONDS);
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for publicationSucceeded", ex);
@@ -136,11 +136,11 @@ public class TelemetryService {
             LOGGER.error("Error while recording log for publicationFailed", ex);
         }
         try {
-            Counter counter1 = meterRegistry.counter("test_event_publication_failed_total");
+            Counter counter1 = meterRegistry.counter("test_event_publication_failed_total", Tags.of("testId", event.getPayload().getTestId()));
             counter1.increment();
 
             Instant publicationEnd = Instant.now();
-            Timer publicationTimer = meterRegistry.timer("test_event_publication_duration");
+            Timer publicationTimer = meterRegistry.timer("test_event_publication_duration", Tags.of("testId", event.getPayload().getTestId()));
             publicationTimer.record(Duration.between(publicationStart, publicationEnd).toMillis(), TimeUnit.MILLISECONDS);
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for publicationFailed", ex);
@@ -148,17 +148,21 @@ public class TelemetryService {
         return msg;
     }
 
-    public synchronized String eventReceived(TestEvent event) {
+    public synchronized String eventReceived(TestEvent event, Instant receptionTimestamp) {
         String msg = "";
+        long eventRoundtripDurationInMillis = Duration.between(event.getPayload().getEventTimestamp(), receptionTimestamp).toMillis();
         try {
-            msg = String.format("Event received. Event is %s.", event);
+            msg = String.format("Event received. Roundtrip duration is %d ms. Event is %s.", eventRoundtripDurationInMillis, event);
             LOGGER.debug(msg);
         } catch (Exception ex) {
             LOGGER.error("Error while recording log for eventReceived", ex);
         }
         try {
-            Counter counter1 = meterRegistry.counter("test_event_received_total");
+            Counter counter1 = meterRegistry.counter("test_event_received_total", Tags.of("testId", event.getPayload().getTestId()));
             counter1.increment();
+
+            Timer roundtripDurationTimer = meterRegistry.timer("test_event_roundtrip_duration", Tags.of("testId", event.getPayload().getTestId()));
+            roundtripDurationTimer.record(eventRoundtripDurationInMillis, TimeUnit.MILLISECONDS);
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventReceived", ex);
         }
@@ -198,14 +202,4 @@ public class TelemetryService {
         }
         return msg;
     }
-
-    public synchronized void  recordEventRoundtripDuration(TestEvent event, long eventRoundtripDurationInMillis) {
-        try {
-            Timer roundtripDurationTimer = meterRegistry.timer("test_event_roundtrip_duration", Tags.of("testId", event.getPayload().getTestId()));
-            roundtripDurationTimer.record(eventRoundtripDurationInMillis, TimeUnit.MILLISECONDS);
-        } catch (Exception ex) {
-            LOGGER.error("Error while recording metric for recordEventRoundtripDuration", ex);
-        }
-    }
-
 }

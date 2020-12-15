@@ -109,7 +109,9 @@ public class NominalTest extends  AbstractTest {
 
     @PostMapping(value = "/webhook", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public synchronized ResponseEntity<Void> onTestEventReceived(@RequestBody TestEvent event, @RequestHeader HttpHeaders httpHeaders) {
-        telemetryService.eventReceived(event);
+        Instant receptionTimestamp = Instant.now();
+
+        telemetryService.eventReceived(event, receptionTimestamp);
 
         String testId = event.getPayload().getTestId();
         lastTestId = testId;
@@ -133,10 +135,8 @@ public class NominalTest extends  AbstractTest {
         ++testData.receivedEventsCount;
 
         // Cumulate the round trip duration to make an average at the end of the test
-        long eventRoundtripDurationInMillis = Duration.between(event.getPayload().getEventTimestamp(), Instant.now()).toMillis();
+        long eventRoundtripDurationInMillis = Duration.between(event.getPayload().getEventTimestamp(), receptionTimestamp).toMillis();
         testData.sumOfEventRoundtripDurationInMillis = testData.sumOfEventRoundtripDurationInMillis + eventRoundtripDurationInMillis;
-
-        telemetryService.recordEventRoundtripDuration(event, eventRoundtripDurationInMillis);
 
         if (event.getPayload().isLastEvent()) {
             if (event.getPayload().getExpectedCount() != testData.receivedEventsCount) {
