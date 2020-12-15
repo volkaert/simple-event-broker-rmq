@@ -399,9 +399,10 @@ The `TestServer` module accepts the following commands:
 - `pub/stop`: stops a given test or the last started test
 - `pub/suspend`: suspends a given test or the last started test. Use the `resume` command to resume the test.
 - `pub/resume`: resumes a given test or the last started test
+- `pub/slowdown`: slows down the publications for a given test or the last started test
 - `sub/accept`: the webhook will return the provided status code or the default successful status code
 - `sub/reject`: the webhook will return the provided status code or the default failure status code
-- `sub/slowdown`: the webhook will slow down to simulate slow consumers
+- `sub/slowdown`: the webhook will slow down to simulate slow consumers.
   
 ### Test Event Payload
 
@@ -410,7 +411,8 @@ The Test Event Payload contains the following attributes:
 - `Instant testTimestamp`: timestamp of the test (start of the test)
 - `String message`: any message (e.g. "Hello World")
 - `Instant eventTimestamp`: timestamp of the current event of the test
-- `Long index`: index of the current event (to check delivery order)
+- `long index`: index of the current event (to check delivery order)
+_ `long pauseInMillisForWebhook`: pause in millis to do on the webhook side (to simulate slow consumers) 
 - `boolean isFirstEvent`: true if this event is the first event of the test
 - `boolean isLastEvent`: true if this event is the last event of the test
 - `Long expectedCount`: expected count of events. *Only present in the last event of the test*.
@@ -426,9 +428,11 @@ The `TestServer` module contains the following tests:
 Examples (with the `nominal` test):
 ```
 curl http://localhost:8100/tests/nominal/pub/run
-curl "http://localhost:8100/tests/nominal/pub/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&sync=true"    
+curl "http://localhost:8100/tests/nominal/pub/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&pauseForWebhook=1000&sync=true"    
 curl http://localhost:8100/tests/nominal/pub/stop
 curl "http://localhost:8100/tests/nominal/pub/stop?testId=123456789"
+curl http://localhost:8100/tests/nominal/pub/slowdown
+curl "http://localhost:8100/tests/nominal/pub/slowdown?testId=123456789&pause=10000"
 curl http://localhost:8100/tests/nominal/sub/accept
 curl "http://localhost:8100/tests/nominal/sub/accept?testId=123456789&status=201"
 curl http://localhost:8100/tests/nominal/sub/reject

@@ -39,7 +39,9 @@ public abstract class AbstractTest {
 
     protected static class TestDataForPublishers {
         boolean stopRequested = false;
-        boolean suspensionRequested = false;}
+        boolean suspensionRequested = false;
+        long pauseInMillis = 0;
+    }
     protected Map<String, TestDataForPublishers> testIdToTestDataForPublishersMap = new ConcurrentHashMap<>();
 
     protected static class TestDataForSubscribers {
@@ -100,7 +102,7 @@ public abstract class AbstractTest {
     }
 
     @GetMapping(value = "/pub/stop", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> stop(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
+    public ResponseEntity<String> stopForPublishers(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForPublishers testData = getTestDataForPublishers(testId);
         testData.stopRequested = true;
@@ -109,7 +111,7 @@ public abstract class AbstractTest {
     }
 
     @GetMapping(value = "/pub/suspend", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> suspend(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
+    public ResponseEntity<String> suspendForPublishers(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForPublishers testData = getTestDataForPublishers(testId);
         testData.suspensionRequested = true;
@@ -117,17 +119,27 @@ public abstract class AbstractTest {
     }
 
     @GetMapping(value = "/pub/resume", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> resume(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
+    public ResponseEntity<String> resumeForPublishers(@RequestParam(required = false) String testId, @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForPublishers testData = getTestDataForPublishers(testId);
         testData.suspensionRequested = false;
         return ResponseEntity.ok("Test " + testId + " has been resumed\n");
     }
 
+    @GetMapping(value = "/pub/slowdown", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> slowdownForPublishers(@RequestParam(required = false) String testId,
+                                                        @RequestParam(required = false, defaultValue = "10000") long pause,
+                                                        @RequestHeader HttpHeaders httpHeaders) {
+        if (testId == null) testId = lastTestId;
+        TestDataForPublishers testData = getTestDataForPublishers(testId);
+        testData.pauseInMillis = pause;
+        return ResponseEntity.ok("Webhook will slow down for " + testData.pauseInMillis + " millis for test " + testId + "\n");
+    }
+
     @GetMapping(value = "/sub/accept", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> accept(@RequestParam(required = false) String testId,
-                                         @RequestParam(required = false, defaultValue = "201") int status,
-                                         @RequestHeader HttpHeaders httpHeaders) {
+    public ResponseEntity<String> acceptForSubscribers(@RequestParam(required = false) String testId,
+                                                       @RequestParam(required = false, defaultValue = "201") int status,
+                                                       @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForSubscribers testData = getTestDataForSubscribers(testId);
         testData.statusToReturnForWebhook = HttpStatus.valueOf(status);
@@ -135,9 +147,9 @@ public abstract class AbstractTest {
     }
 
     @GetMapping(value = "/sub/reject", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> reject(@RequestParam(required = false) String testId,
-                                         @RequestParam(required = false, defaultValue = "500") int status,
-                                         @RequestHeader HttpHeaders httpHeaders) {
+    public ResponseEntity<String> rejectForSubscribers(@RequestParam(required = false) String testId,
+                                                       @RequestParam(required = false, defaultValue = "500") int status,
+                                                       @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForSubscribers testData = getTestDataForSubscribers(testId);
         testData.statusToReturnForWebhook = HttpStatus.valueOf(status);
@@ -145,9 +157,9 @@ public abstract class AbstractTest {
     }
 
     @GetMapping(value = "/sub/slowdown", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> slowdown(@RequestParam(required = false) String testId,
-                                           @RequestParam(required = false, defaultValue = "10000") long pause,
-                                           @RequestHeader HttpHeaders httpHeaders) {
+    public ResponseEntity<String> slowdownForSubscribers(@RequestParam(required = false) String testId,
+                                                         @RequestParam(required = false, defaultValue = "10000") long pause,
+                                                         @RequestHeader HttpHeaders httpHeaders) {
         if (testId == null) testId = lastTestId;
         TestDataForSubscribers testData = getTestDataForSubscribers(testId);
         testData.pauseInMillis = pause;

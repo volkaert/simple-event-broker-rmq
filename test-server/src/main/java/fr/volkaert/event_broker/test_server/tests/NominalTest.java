@@ -32,6 +32,7 @@ public class NominalTest extends  AbstractTest {
             @RequestParam(required = false) String channel,
             @RequestParam(required = false, defaultValue = "1") long n,
             @RequestParam(required = false, defaultValue = "0") long pause,
+            @RequestParam(required = false, defaultValue = "0") long pauseForWebhook,
             @RequestParam(required = false, defaultValue = "false") boolean sync,
             @RequestHeader HttpHeaders httpHeaders) {
 
@@ -39,24 +40,26 @@ public class NominalTest extends  AbstractTest {
         lastTestId = testId;
 
         if (sync) {
-            privateRun(testId, publicationCode, timeToLiveInSeconds, channel, n, pause, httpHeaders);
+            privateRun(testId, publicationCode, timeToLiveInSeconds, channel, n, pause, pauseForWebhook, httpHeaders);
             return ResponseEntity.ok("Events published for test " + testId + "\n");
         }
         else {
             final String finalTestId = testId;
             executorService.execute(() -> {
-                privateRun(finalTestId, publicationCode, timeToLiveInSeconds, channel, n, pause, httpHeaders);
+                privateRun(finalTestId, publicationCode, timeToLiveInSeconds, channel, n, pause, pauseForWebhook, httpHeaders);
             });
             return ResponseEntity.ok("Test " + testId + " started\n");
         }
     }
 
     private void privateRun(String testId, String publicationCode, Long timeToLiveInSeconds, String channel,
-                            long n, long pauseInMillis, HttpHeaders httpHeaders) {
+                            long n, long pauseInMillis, long pauseInMillisForWebhook, HttpHeaders httpHeaders) {
         String msg = String.format("/tests/nominal/run called (headers are %s)", n, httpHeaders);
         LOGGER.info(msg);
 
         Instant testTimestamp = Instant.now();
+
+        TestDataForPublishers testData = getTestDataForPublishers(testId);
 
         TestRecord record = new TestRecord();
         record.setTestId(testId);
@@ -87,6 +90,7 @@ public class NominalTest extends  AbstractTest {
             event.getPayload().setTestTimestamp(testTimestamp);
             event.getPayload().setEventTimestamp(eventTimestamp);
             event.getPayload().setIndex(index);
+            event.getPayload().setPauseInMillisForWebhook(pauseInMillisForWebhook);
 
             if (index == 1) {
                 telemetryService.testStarted(event);
@@ -101,8 +105,9 @@ public class NominalTest extends  AbstractTest {
             BrokerEvent eventReturnedByBroker = publishTestEvent(event);
             LOGGER.debug("Event returned by the Broker: {}", eventReturnedByBroker);
 
-            if (index < n && pauseInMillis > 0) {
-                pause(pauseInMillis);
+            long totalPauseInMillis = pauseInMillis + testData.pauseInMillis;
+            if (index < n && totalPauseInMillis > 0) {
+                pause(totalPauseInMillis);
             }
         }
     }
@@ -159,10 +164,11 @@ public class NominalTest extends  AbstractTest {
             }
         }
 
-        if (testData.pauseInMillis > 0) {
-            pause(testData.pauseInMillis);
-
+        long totalPauseInMillis = event.getPayload().getPauseInMillisForWebhook() + testData.pauseInMillis;
+        if (totalPauseInMillis > 0) {
+            pause(totalPauseInMillis);
         }
+
         return ResponseEntity.status(testData.statusToReturnForWebhook).build();
     }
 }

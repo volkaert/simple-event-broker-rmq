@@ -17,7 +17,9 @@ public class TestEventPayload {
     private String message;         // present in all events
 
     private Instant eventTimestamp; // present in all events
-    private Long index;             // present in al events; used to check the delivery order
+    private long index;             // present in al events; used to check the delivery order
+
+    private long pauseInMillisForWebhook;   // present in all events. May be 0.
 
     private boolean isFirstEvent;   // true is this event is the first event of the test
     private boolean isLastEvent;    // true is this event is the last event of the test (not just the last received, but also the last of the test)
