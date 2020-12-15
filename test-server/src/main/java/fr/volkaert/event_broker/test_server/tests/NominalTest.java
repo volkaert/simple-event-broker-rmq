@@ -85,7 +85,7 @@ public class NominalTest extends  AbstractTest {
             event.setPayload(new TestEventPayload());
             event.getPayload().setTestId(testId);
             event.getPayload().setTestTimestamp(testTimestamp);
-            event.getPayload().setCurrentEventTimestamp(eventTimestamp);
+            event.getPayload().setEventTimestamp(eventTimestamp);
             event.getPayload().setIndex(index);
 
             if (index == 1) {
@@ -133,7 +133,7 @@ public class NominalTest extends  AbstractTest {
         ++testData.receivedEventsCount;
 
         // Cumulate the round trip duration to make an average at the end of the test
-        long eventRoundtripDurationInMillis = Duration.between(event.getPayload().getCurrentEventTimestamp(), Instant.now()).toMillis();
+        long eventRoundtripDurationInMillis = Duration.between(event.getPayload().getEventTimestamp(), Instant.now()).toMillis();
         testData.sumOfEventRoundtripDurationInMillis = testData.sumOfEventRoundtripDurationInMillis + eventRoundtripDurationInMillis;
 
         if (event.getPayload().isLastEvent()) {

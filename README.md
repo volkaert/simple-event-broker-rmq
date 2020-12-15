@@ -405,21 +405,21 @@ The `TestServer` module accepts the following commands:
   
 ### Test Event Payload
 
-Teh Test Event Payload contains the following attributes:
+The Test Event Payload contains the following attributes:
 - `String testId`: id of the test
 - `Instant testTimestamp`: timestamp of the test (start of the test)
 - `String message`: any message (e.g. "Hello World")
-- `Instant currentEventTimestamp`: timestamp of the current event of the test
+- `Instant eventTimestamp`: timestamp of the current event of the test
+- `Long index`: index of the current event (to check delivery order)
 - `boolean isFirstEvent`: true if this event is the first event of the test
 - `boolean isLastEvent`: true if this event is the last event of the test
 - `Long expectedCount`: expected count of events. *Only present in the last event of the test*.
-- `Long index`: index of the current event (to check delivery order)
   
 
 ### Available Tests
 
 The `TestServer` module contains the following tests:
-- `nominal`: checks that all events are delivered and in the correct order. This tests uses a webhook at `/tests/nominal/webhook`.
+- `nominal`: checks that all events are delivered and in the correct order. This test uses a webhook at `/tests/nominal/webhook`.
   
 
 ### Examples

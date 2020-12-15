@@ -11,19 +11,16 @@ import java.time.Instant;
 @AllArgsConstructor
 public class TestEventPayload {
 
-    private String testId;
-    private Instant testTimestamp;
+    private String testId;          // present in all events
+    private Instant testTimestamp;  // present in all events
 
-    private String message;
+    private String message;         // present in all events
 
-    private Instant currentEventTimestamp;
+    private Instant eventTimestamp; // present in all events
+    private Long index;             // present in al events; used to check the delivery order
 
-    private boolean isFirstEvent;
-    //private Instant firstEventTimestamp;
+    private boolean isFirstEvent;   // true is this event is the first event of the test
+    private boolean isLastEvent;    // true is this event is the last event of the test (not just the last received, but also the last of the test)
 
-    private boolean isLastEvent;
-    //private Instant lastEventTimestamp;
-    private Long expectedCount;
-
-    private Long index; // to check delivery order
+    private Long expectedCount;     // present only in the last event of the test
 }
