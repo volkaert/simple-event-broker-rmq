@@ -12,7 +12,8 @@ This version uses SpringBoot and RabbitMQ.
 - Subscription Manager. Port dynamically defined by Eureka. Name in Eureka: SubscriptionManager.
 - Subscription Gateway (optional). In dev mode, it uses port 8085.
 - Subscription Adapter. Port dynamically defined by Eureka. Name in Eureka: PublicationAdapter.
-- Catalog. In dev mode, it uses port 8089.
+- Catalog. Port dynamically defined by Eureka. Name in Eureka: Catalog.
+- Catalog Adapter. Port dynamically defined by Eureka. Name in Eureka: CatalogAdapter.
 - Test/Fake Subscriber. In dev mode, it uses port 8099.
 - Probe. In dev mode, it uses port 8100.
 
@@ -28,8 +29,9 @@ for an organization. The Adapters are independent of the underlying broker techn
 The roles and responsibilities of managers and adapters are clearly defined to allow the seamless replacement of a
 component by another.
 
-The `Catalog` is in charge of the management of the objects `EventType`, `Publication` and `Subscription`. 
-Most of the other components require access to the Catalog to operate.
+The `Catalog` is in charge of the management of the objects `EventType`, `Publication` and `Subscription`.
+The `CatalogAdapter` is an adapter between the `Catalog` component and the other components that needs access to the 
+Catalog to operate.
  
 The `Publication Gateway` is the entry point to publish an event. It is based on a `Spring Cloud Gateway`. It offers 
 automatic retry feature to ensure no interruption service even in the case of the release of a new version of 
@@ -158,11 +160,12 @@ pod and restart another one. In case of a readiness failure, Kubernetes will sto
 the readiness state succeed. Liveness state should be used only for non-recoverable errors.
 
 In this project, liveness and readiness probes are used as follows:
-- The Catalog, Publication Manager and Publication Adapter modules expose their probes at `/actuator/health/liveness` and 
+- The Catalog, CatalogAdapter, Publication Manager and Publication Adapter modules expose their probes at `/actuator/health/liveness` and 
 `/actuator/health/readiness`
 - Those endpoints return `200 OK` if the state is healthy and `503 Service Unavailable` if the state is unhealthy
 - The Publication Adapter is ready if the Publication Manager is ready
-- The Publication Manager is ready if the Catalog is ready
+- The Publication Manager is ready if the Catalog Adapter is ready
+- The Catalog Adapter is ready if the Catalog is ready
 - The Catalog is ready if its database is ready (if it can load event types from the db without error)
  
 
@@ -194,6 +197,13 @@ cd catalog
 ../mvnw clean spring-boot:run
 ```
 >You should start only one instance of the Catalog (because this simple project uses an in-memory database H2)
+
+### Run the Catalog Adapter
+```
+cd catalog-adapter
+../mvnw clean spring-boot:run
+```
+>You should start only one instance of the Catalog Adapter (you could start many instances, but 1 instance is sufficient)
 
 ### Run the Subscription Adapter
 

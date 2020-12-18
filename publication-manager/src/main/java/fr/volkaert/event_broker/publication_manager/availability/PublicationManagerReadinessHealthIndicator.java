@@ -21,15 +21,15 @@ public class PublicationManagerReadinessHealthIndicator implements CompositeHeal
     BrokerConfig config;
 
     @Autowired
-    @Qualifier("RestTemplateForCatalogClient")
-    RestTemplate restTemplateForCatalogClient;
+    @Qualifier("RestTemplateForCatalogAdapter")
+    RestTemplate restTemplateForCatalogAdapter;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublicationManagerReadinessHealthIndicator.class);
 
     private Map<String, HealthContributor> contributors = new LinkedHashMap<>();
 
     public PublicationManagerReadinessHealthIndicator() {
-        this.contributors.put("catalogReadiness", new CatalogReadinessHealthIndicator());
+        this.contributors.put("catalogAdapterReadiness", new CatalogAdapterReadinessHealthIndicator());
     }
 
     @Override
@@ -43,19 +43,19 @@ public class PublicationManagerReadinessHealthIndicator implements CompositeHeal
                 .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
     }
 
-    class CatalogReadinessHealthIndicator implements HealthIndicator {
+    class CatalogAdapterReadinessHealthIndicator implements HealthIndicator {
         @Override
         public Health health() {
-            LOGGER.debug("Checking Catalog readiness state");
-            String readinessUrlForCatalog = config.getCatalogUrl() + "/actuator/health/readiness";
+            LOGGER.debug("Checking CatalogAdapter readiness state");
+            String readinessUrlForCatalogAdapter = config.getCatalogAdapterUrl() + "/actuator/health/readiness";
             try {
-                ResponseEntity<Void> response = restTemplateForCatalogClient.getForEntity(readinessUrlForCatalog, Void.class);
+                ResponseEntity<Void> response = restTemplateForCatalogAdapter.getForEntity(readinessUrlForCatalogAdapter, Void.class);
                 if (response.getStatusCode().is2xxSuccessful())
                     return Health.up().build();
                 else
                     return Health.down().withDetail("statusCode", response.getStatusCode()).build();
             } catch (Exception ex) {
-                LOGGER.error("Exception while checking Catalog readiness state", ex);
+                LOGGER.error("Exception while checking CatalogAdapter readiness state", ex);
                 return Health.down().withDetail("exception", ex).build();
             }
         }

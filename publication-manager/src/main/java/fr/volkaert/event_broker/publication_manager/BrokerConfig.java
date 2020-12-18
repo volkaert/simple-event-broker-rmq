@@ -12,8 +12,7 @@ public class BrokerConfig {
     private String rabbitMQHost;
     private int rabbitMQPort;
 
-    private String catalogUrl;
-    private String pulsarServiceUrl;
+    private String catalogAdapterUrl;
 
     private String componentTypeName;   // Useful for metrics (to group them by component type)
     private String componentInstanceId; // Useful for metrics (to distinguish instances of the same component type)

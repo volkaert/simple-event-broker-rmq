@@ -1,4 +1,4 @@
-package fr.volkaert.event_broker.catalog_client;
+package fr.volkaert.event_broker.catalog_adapter_client;
 
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.EventType;
@@ -28,19 +28,19 @@ import java.util.List;
 @Configuration
 @EnableCaching
 @EnableScheduling
-public class CatalogClient {
+public class CatalogAdapterClient {
 
-    @Value("${broker.catalog-url}")
-    String catalogUrl;
+    @Value("${broker.catalog-adapter-url}")
+    String catalogAdapterUrl;
 
     @Autowired
-    @Qualifier("RestTemplateForCatalogClient")
+    @Qualifier("RestTemplateForCatalogAdapter")
     RestTemplate restTemplate;
 
     @Autowired
     CacheManager cacheManager;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CatalogAdapterClient.class);
 
     @Scheduled(fixedDelay = 60000)
     public void clearCaches() {
@@ -52,14 +52,14 @@ public class CatalogClient {
 
     @Cacheable(value = "event-types")
     public List<EventType> getEventTypes() {
-        ResponseEntity<List<EventType>> responseEntity = restTemplate.exchange(catalogUrl + "/catalog/event-types", HttpMethod.GET, null,
+        ResponseEntity<List<EventType>> responseEntity = restTemplate.exchange(catalogAdapterUrl + "/catalog/event-types", HttpMethod.GET, null,
             new ParameterizedTypeReference<List<EventType>>() {});
         return responseEntity.getBody();
     }
 
     @Cacheable(value = "event-types")
     public EventType getEventType(String code) {
-        ResponseEntity<EventType> responseEntity = restTemplate.getForEntity(catalogUrl + "/catalog/event-types/" + code, EventType.class);
+        ResponseEntity<EventType> responseEntity = restTemplate.getForEntity(catalogAdapterUrl + "/catalog/event-types/" + code, EventType.class);
         return responseEntity.getBody();
     }
     @Cacheable(value = "event-types")
@@ -75,14 +75,14 @@ public class CatalogClient {
 
     @Cacheable(value = "publications")
     public List<Publication> getPublications() {
-        ResponseEntity<List<Publication>> responseEntity = restTemplate.exchange(catalogUrl + "/catalog/publications", HttpMethod.GET, null,
+        ResponseEntity<List<Publication>> responseEntity = restTemplate.exchange(catalogAdapterUrl + "/catalog/publications", HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Publication>>() {});
         return responseEntity.getBody();
     }
 
     @Cacheable(value = "publications")
     public Publication getPublication(String code) {
-        ResponseEntity<Publication> responseEntity = restTemplate.getForEntity(catalogUrl + "/catalog/publications/" + code, Publication.class);
+        ResponseEntity<Publication> responseEntity = restTemplate.getForEntity(catalogAdapterUrl + "/catalog/publications/" + code, Publication.class);
         return responseEntity.getBody();
     }
 
@@ -99,14 +99,14 @@ public class CatalogClient {
 
     @Cacheable(value = "subscriptions")
     public List<Subscription> getSubscriptions() {
-        ResponseEntity<List<Subscription>> responseEntity = restTemplate.exchange(catalogUrl + "/catalog/subscriptions", HttpMethod.GET, null,
+        ResponseEntity<List<Subscription>> responseEntity = restTemplate.exchange(catalogAdapterUrl + "/catalog/subscriptions", HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Subscription>>() {});
         return responseEntity.getBody();
     }
 
     @Cacheable(value = "subscriptions")
     public Subscription getSubscription(String code) {
-        ResponseEntity<Subscription> responseEntity = restTemplate.getForEntity(catalogUrl + "/catalog/subscriptions/" + code, Subscription.class);
+        ResponseEntity<Subscription> responseEntity = restTemplate.getForEntity(catalogAdapterUrl + "/catalog/subscriptions/" + code, Subscription.class);
         return responseEntity.getBody();
     }
 

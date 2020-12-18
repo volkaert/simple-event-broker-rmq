@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.publication_manager;
 
-import fr.volkaert.event_broker.catalog_client.CatalogClient;
+import fr.volkaert.event_broker.catalog_adapter_client.CatalogAdapterClient;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.EventType;
 import fr.volkaert.event_broker.model.InflightEvent;
@@ -23,7 +23,7 @@ public class PublicationManagerService {
     BrokerConfig config;
 
     @Autowired
-    CatalogClient catalog;
+    CatalogAdapterClient catalog;
 
     @Autowired
     RabbitTemplate rabbitTemplate;

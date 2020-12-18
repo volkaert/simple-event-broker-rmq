@@ -1,7 +1,7 @@
 package fr.volkaert.event_broker.subscription_manager;
 
 import com.rabbitmq.client.Channel;
-import fr.volkaert.event_broker.catalog_client.CatalogClient;
+import fr.volkaert.event_broker.catalog_adapter_client.CatalogAdapterClient;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.EventType;
 import fr.volkaert.event_broker.model.InflightEvent;
@@ -30,7 +30,6 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +43,7 @@ public class SubscriptionManagerService {
     BrokerConfig config;
 
     @Autowired
-    CatalogClient catalog;
+    CatalogAdapterClient catalog;
 
     @Autowired
     RabbitTemplate rabbitTemplate;
