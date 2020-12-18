@@ -441,6 +441,13 @@ curl http://localhost:8100/tests/nominal/sub/slowdown
 curl "http://localhost:8100/tests/nominal/sub/slowdown?testId=123456789&pause=10000"
 ```
 
+```
+curl "http://localhost:8100/tests/nominal/pub/run?n=60&pause=1000&timeToLiveInSeconds=120"
+curl http://localhost:8100/tests/nominal/sub/reject
+curl http://localhost:8100/tests/nominal/sub/accept
+curl http://localhost:8100/tests/nominal/pub/stop
+```
+
 
 ### Recordings
 

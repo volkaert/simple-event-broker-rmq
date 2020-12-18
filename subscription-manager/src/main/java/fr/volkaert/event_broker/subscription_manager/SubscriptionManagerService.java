@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Configuration
@@ -64,7 +65,7 @@ public class SubscriptionManagerService {
     @Qualifier("RestTemplateForSubscriptionAdapter")
     RestTemplate restTemplate;
 
-    Map<String, SimpleMessageListenerContainer> subscriptionCodeToRabbitMQConsumerMap = new HashMap<>();
+    Map<String, SimpleMessageListenerContainer> subscriptionCodeToRabbitMQConsumerMap = new ConcurrentHashMap<>();
 
     @Autowired
     TelemetryService telemetryService;
@@ -76,7 +77,7 @@ public class SubscriptionManagerService {
         createRabbitMQConsumers();
     }
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 10000)
     // *** NEVER LET AN EXCEPTION BE RAISED/THROWN BY THIS OPERATION !!! ***
     public void createRabbitMQConsumers() {
         try {
@@ -90,7 +91,7 @@ public class SubscriptionManagerService {
                     try {
                         String eventTypeCode = subscription.getEventTypeCode();
                         if (shouldTheEventBeManagedByThisInstanceOfSubscriptionManager(eventTypeCode)) {
-                            createRabbitMQConsumerIfNotAlreadyDone(eventTypeCode, subscription.getCode());
+                            createRabbitMQConsumerIfAbsent(eventTypeCode, subscription.getCode());
                         }
                     } catch (Exception ex) {  // if there is an issue with a subscription, continue with the others...
                         // No need to log the error since it has already been logged in createRabbitMQConsumer()
@@ -104,16 +105,23 @@ public class SubscriptionManagerService {
         }
     }
 
-    private synchronized SimpleMessageListenerContainer createRabbitMQConsumerIfNotAlreadyDone(String eventTypeCode, String subscriptionCode) {
+    private synchronized SimpleMessageListenerContainer createRabbitMQConsumerIfAbsent(String eventTypeCode, String subscriptionCode) {
+
+        // From https://docs.spring.io/spring-amqp/docs/1.4.5.RELEASE/reference/html/amqp.html: When a listener throws
+        // an exception, it is wrapped in a ListenerExecutionFailedException and, normally the message is rejected and
+        // requeued by the broker. Setting defaultRequeueRejected to false will cause messages to be discarded (or routed
+        // to a dead letter exchange).
+        final boolean defaultRequeueRejected = false;
+
         SimpleMessageListenerContainer rabbitMQListenerContainer = subscriptionCodeToRabbitMQConsumerMap.computeIfAbsent(subscriptionCode, x -> {
             try {
                 String exchangeNameForEventTypeCode = "X_" + eventTypeCode;
                 String exchangeNameForSubscriptionCode = "X_" + subscriptionCode;
                 String queueNameForSubscriptionCode = "Q_" + subscriptionCode;
-                String nameForDeadLetterExchange = "DLX_" + subscriptionCode;
-                String nameForDeadLetterQueue = "DLQ_" + subscriptionCode;
-                String nameForRetryExchange = "RX_" + subscriptionCode;
-                String nameForRetryQueue = "RQ_" + subscriptionCode;
+                //String nameForDeadLetterExchange = "DLX_" + subscriptionCode;
+                //String nameForDeadLetterQueue = "DLQ_" + subscriptionCode;
+                //String nameForRetryExchange = "RX_" + subscriptionCode;
+                //String nameForRetryQueue = "RQ_" + subscriptionCode;
 
                 // NOMINAL **********
 
@@ -122,8 +130,8 @@ public class SubscriptionManagerService {
 
                 Queue queueForSubscriptionCode = QueueBuilder
                         .durable(queueNameForSubscriptionCode)
-                        .withArgument("x-dead-letter-exchange", nameForDeadLetterExchange)
-                        .withArgument("x-dead-letter-routing-key", nameForDeadLetterQueue)
+                        //.withArgument("x-dead-letter-exchange", nameForDeadLetterExchange)
+                        //.withArgument("x-dead-letter-routing-key", nameForDeadLetterQueue)
                         .build();
                 rabbitAdmin.declareQueue(queueForSubscriptionCode);
 
@@ -132,6 +140,7 @@ public class SubscriptionManagerService {
 
                 // DEAD LETTER **********
 
+                /*
                 Exchange deadLetterExchange = ExchangeBuilder.directExchange(nameForDeadLetterExchange).build();
                 rabbitAdmin.declareExchange(deadLetterExchange);
 
@@ -140,9 +149,11 @@ public class SubscriptionManagerService {
 
                 Binding deadLetterBinding = BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with(nameForDeadLetterQueue).noargs();
                 rabbitAdmin.declareBinding(deadLetterBinding);
+                */
 
                 // RETRY **********
 
+                /*
                 Exchange retryExchange = ExchangeBuilder.directExchange(nameForRetryExchange).build();
                 rabbitAdmin.declareExchange(retryExchange);
 
@@ -162,6 +173,7 @@ public class SubscriptionManagerService {
 
                 Binding retryBinding2 = BindingBuilder.bind(queueForSubscriptionCode).to(exchangeForSubscriptionCode).with(queueNameForSubscriptionCode).noargs();
                 rabbitAdmin.declareBinding(retryBinding2);
+                */
 
                 // LISTENER **********
 
@@ -175,14 +187,16 @@ public class SubscriptionManagerService {
                     }
                 };
                 MessageListenerAdapter rabbitMQListenerAdapter = new MessageListenerAdapter(rabbitMQListener, jackson2JsonMessageConverter);
-                rabbitMQListenerAdapter.setDefaultRequeueRejected(false);
+                rabbitMQListenerAdapter.setDefaultRequeueRejected(defaultRequeueRejected);
 
                 // LISTENER CONTAINER **********
 
                 SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(rabbitMQConnectionFactory);
+                container.setForceCloseChannel(true);
+                container.setShutdownTimeout(0);
                 container.setMessageListener(rabbitMQListenerAdapter);
                 container.setQueueNames(queueNameForSubscriptionCode);
-                container.setDefaultRequeueRejected(false);
+                container.setDefaultRequeueRejected(defaultRequeueRejected);
                 container.setConcurrentConsumers(1);
                 container.setMaxConcurrentConsumers(1);
                 container.start();
@@ -202,8 +216,8 @@ public class SubscriptionManagerService {
             throw new BrokerException(HttpStatus.INTERNAL_SERVER_ERROR, msg);
         }
         return rabbitMQListenerContainer;
-
     }
+
 
     private void handleRabbitMQMessage(InflightEvent inflightEvent, String eventTypeCode, String subscriptionCode, Message rabbitMQMessage, Channel rabbitMQChannel) {
         Instant deliveryStart = Instant.now();
@@ -246,9 +260,10 @@ public class SubscriptionManagerService {
                 inflightEvent = callSubscriptionAdapter(inflightEvent);
             } catch (Exception ex) {
                 telemetryService.eventDeliveryFailed(inflightEvent, ex, deliveryStart);
-                LOGGER.warn("Event sent to RetryExchange because an exception was raised while calling the Subscription Adapter. Event is {}.",
-                        inflightEvent.toShortLog());
-                recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+                destroyRabbitMQConsumerForTheSubscription(subscriptionCode);
+                //LOGGER.warn("Event sent to RetryExchange because an exception was raised while calling the Subscription Adapter. Event is {}.",
+                //        inflightEvent.toShortLog());
+                //recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
                 return; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
             }
 
@@ -265,9 +280,10 @@ public class SubscriptionManagerService {
             // of some security modules)
             if (! (inflightEvent.getWebhookHttpStatus() >= 200 && inflightEvent.getWebhookHttpStatus() < 300)) {
                 telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart);
-                LOGGER.warn("Event sent to RetryExchange because the webhook returned the unsuccessful http status {}. Event is {}.",
-                        inflightEvent.getWebhookHttpStatus(), inflightEvent.toShortLog());
-                recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+                destroyRabbitMQConsumerForTheSubscription(subscriptionCode);
+                //LOGGER.warn("Event sent to RetryExchange because the webhook returned the unsuccessful http status {}. Event is {}.",
+                //        inflightEvent.getWebhookHttpStatus(), inflightEvent.toShortLog());
+                //recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
                 return; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
             }
 
@@ -280,8 +296,9 @@ public class SubscriptionManagerService {
             if (inflightEvent != null) {
                 telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart);
             }
-            LOGGER.warn("Event sent to RetryExchange because an unexpected error occurred while handling RabbitMQ message. Event is {}.", (inflightEvent != null ? inflightEvent.toShortLog() : "null"));
-            recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            destroyRabbitMQConsumerForTheSubscription(subscriptionCode);
+            //LOGGER.warn("Event sent to RetryExchange because an unexpected error occurred while handling RabbitMQ message. Event is {}.", (inflightEvent != null ? inflightEvent.toShortLog() : "null"));
+            //recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
         }
     }
 
@@ -291,23 +308,23 @@ public class SubscriptionManagerService {
         boolean eventExpired = deliveryStart.isAfter(inflightEvent.getExpirationDate());
         if (eventExpired) {
             telemetryService.eventDeliveryAbortedDueToExpiredEvent(inflightEvent);
-            LOGGER.warn("Event sent to DeadLetterExchange because the event has expired. Event is {}.", inflightEvent.toShortLog());
-            recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            //LOGGER.warn("Event sent to DeadLetterExchange because the event has expired. Event is {}.", inflightEvent.toShortLog());
+            //recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
             return false; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
         }
 
         Subscription subscription = catalog.getSubscription(subscriptionCode);
         if (subscription == null) {
             String msg = telemetryService.eventDeliveryAbortedDueToInvalidSubscriptionCode(inflightEvent);
-            LOGGER.warn("Event sent to DeadLetterExchange because the subscription code '{}' is invalid. Event is {}.", subscriptionCode, inflightEvent.toShortLog());
-            recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            //LOGGER.warn("Event sent to DeadLetterExchange because the subscription code '{}' is invalid. Event is {}.", subscriptionCode, inflightEvent.toShortLog());
+            //recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
             return false; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
         }
 
         if (! subscription.isActive()) {
             telemetryService.eventDeliveryAbortedDueToInactiveSubscription(inflightEvent);
-            LOGGER.warn("Event sent to DeadLetterExchange because the subscription '{}' is not active. Event is {}.", subscriptionCode, inflightEvent.toShortLog());
-            recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            //LOGGER.warn("Event sent to DeadLetterExchange because the subscription '{}' is not active. Event is {}.", subscriptionCode, inflightEvent.toShortLog());
+            //recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
             return false; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
         }
 
@@ -315,15 +332,15 @@ public class SubscriptionManagerService {
         EventType eventType = catalog.getEventType(eventTypeCode);
         if (eventType == null) {
             String msg = telemetryService.eventDeliveryAbortedDueToInvalidEventTypeCode(inflightEvent);
-            LOGGER.warn("Event sent to DeadLetterExchange because the event type code '{}' is invalid. Event is {}.", eventTypeCode, inflightEvent.toShortLog());
-            recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            //LOGGER.warn("Event sent to DeadLetterExchange because the event type code '{}' is invalid. Event is {}.", eventTypeCode, inflightEvent.toShortLog());
+            //recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
             return false; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
         }
 
         if (! eventType.isActive()) {
             telemetryService.eventDeliveryAbortedDueToInactiveEventType(inflightEvent);
-            LOGGER.warn("Event sent to DeadLetterExchange because the event type '{}' is not active. Event is {}.", eventTypeCode, inflightEvent.toShortLog());
-            recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            //LOGGER.warn("Event sent to DeadLetterExchange because the event type '{}' is not active. Event is {}.", eventTypeCode, inflightEvent.toShortLog());
+            //recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
             return false; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
         }
 
@@ -383,12 +400,13 @@ public class SubscriptionManagerService {
         if (eventExpiredDueToTimeToLiveForWebhookError) {
             LOGGER.warn("Event expired before delivery due to time to live expiration because of a webhook {} error. Event is {}.",
                     eventExpirationReason, inflightEvent.toShortLog());
-            LOGGER.warn("Event sent to DeadLetterExchange because the event has expired. Event is {}.", inflightEvent.toShortLog());
-            recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
+            //LOGGER.warn("Event sent to DeadLetterExchange because the event has expired. Event is {}.", inflightEvent.toShortLog());
+            //recordEventInDeadLetterExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel);
         }
         else {
-            LOGGER.warn("Event sent to RetryExchange. Event is {}.", inflightEvent.toShortLog());
-            recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel );
+            destroyRabbitMQConsumerForTheSubscription(subscription.getCode());
+            //LOGGER.warn("Event sent to RetryExchange. Event is {}.", inflightEvent.toShortLog());
+            //recordEventInRetryExchange(inflightEvent, rabbitMQMessage, rabbitMQChannel );
         }
     }
 
@@ -467,6 +485,20 @@ public class SubscriptionManagerService {
         // Since no exception is raised, the RabbitMQ message will be acknowledged
     }
 
+    private void destroyRabbitMQConsumerForTheSubscription(String subscriptionCode) {
+        LOGGER.warn("Destroying the RabbitMQConsumer for the subscription {}", subscriptionCode);
+        SimpleMessageListenerContainer rabbitMQListenerContainer = subscriptionCodeToRabbitMQConsumerMap.remove(subscriptionCode);
+        if (rabbitMQListenerContainer != null) {
+            try {
+                rabbitMQListenerContainer.destroy();
+            } catch (Exception ex) {
+                String msg = String.format("Could not destroy the RabbitMQConsumer for the subscription %s", subscriptionCode);
+                LOGGER.error(msg, ex);
+            }
+        }
+    }
+
+    /*
     private void recordEventInRetryExchange(InflightEvent event, Message rabbitMQMessage, Channel rabbitMQChannel) {
         if (event == null) return;
         try {
@@ -488,7 +520,9 @@ public class SubscriptionManagerService {
                     event.getEventTypeCode(), event.getSubscriptionCode(), event.toShortLog(), ex);
         }
     }
+    */
 
+    /*
     private void recordEventInDeadLetterExchange(InflightEvent event, Message rabbitMQMessage, Channel rabbitMQChannel) {
         if (event == null) return;
         try {
@@ -502,6 +536,7 @@ public class SubscriptionManagerService {
                     event.getEventTypeCode(), event.getSubscriptionCode(), event.toShortLog(), ex);
         }
     }
+    */
 
     private boolean isEventExpiredDueToTimeToLiveForWebhookError(InflightEvent event, Instant now, long defaultTimeToLiveForWebhookError, Long timeToLiveForWebhookErrorInSubscription) {
         long timeToLiveInSecondsToUse = defaultTimeToLiveForWebhookError;
@@ -512,12 +547,7 @@ public class SubscriptionManagerService {
     }
 
     private boolean shouldTheEventBeManagedByThisInstanceOfSubscriptionManager(String eventTypeCode) {
-        int sumOfAsciiCodesOfCharsOfEventTypeCode = 0;
-        int eventTypeCodeLength = eventTypeCode.length();
-        for (int i = 0; i < eventTypeCodeLength; i++) {
-            sumOfAsciiCodesOfCharsOfEventTypeCode += eventTypeCode.charAt(i);
-        }
-        int indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent = sumOfAsciiCodesOfCharsOfEventTypeCode % config.getClusterSize();
+        int indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent = eventTypeCode.hashCode() % config.getClusterSize();
         return indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent == config.getClusterIndex();
     }
 }
