@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.test_server.tests;
 
-import fr.volkaert.event_broker.test_server.TestServerConfig;
+import fr.volkaert.event_broker.test_server.config.TestServerConfig;
 import fr.volkaert.event_broker.test_server.model.BrokerEvent;
 import fr.volkaert.event_broker.test_server.model.TestEvent;
 import fr.volkaert.event_broker.test_server.model.TestRecord;

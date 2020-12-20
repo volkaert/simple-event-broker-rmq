@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.probe;
 
-import fr.volkaert.event_broker.probe.model.BrokerEvent;
+import fr.volkaert.event_broker.probe.config.ProbeConfig;
 import fr.volkaert.event_broker.probe.model.ProbeEvent;
 import fr.volkaert.event_broker.probe.model.ProbeEventPayload;
 import fr.volkaert.event_broker.probe.telemetry.TelemetryService;

@@ -1,5 +1,6 @@
-package fr.volkaert.event_broker.operation_manager;
+package fr.volkaert.event_broker.operation_manager.config;
 
+import fr.volkaert.event_broker.operation_manager.config.BrokerConfig;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;

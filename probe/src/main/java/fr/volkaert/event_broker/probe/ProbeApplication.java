@@ -1,5 +1,6 @@
 package fr.volkaert.event_broker.probe;
 
+import fr.volkaert.event_broker.probe.config.ProbeConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import java.time.Duration;
 public class ProbeApplication {
 
 	@Autowired
-	ProbeConfig config;
+    ProbeConfig config;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProbeApplication.class);
 

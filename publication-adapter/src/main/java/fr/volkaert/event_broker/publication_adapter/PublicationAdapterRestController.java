@@ -1,8 +1,10 @@
-package fr.volkaert.event_broker.publication_manager;
+package fr.volkaert.event_broker.publication_adapter;
 
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
-import fr.volkaert.event_broker.model.InflightEvent;
+import fr.volkaert.event_broker.publication_adapter.config.BrokerConfig;
+import fr.volkaert.event_broker.publication_adapter.model.EventFromPublisher;
+import fr.volkaert.event_broker.publication_adapter.model.EventToPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,21 +17,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/events")
-public class PublicationManagerController {
+public class PublicationAdapterRestController {
 
     @Autowired
     BrokerConfig config;
 
     @Autowired
-    PublicationManagerService publicationManagerService;
+    PublicationAdapterService publicationAdapterService;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublicationManagerController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PublicationAdapterRestController.class);
 
     @PostMapping
-    public ResponseEntity<Object> publish(@RequestBody InflightEvent inflightEvent) {
+    public ResponseEntity<Object> publish(@RequestBody EventFromPublisher eventFromPublisher) {
         try {
-            inflightEvent = publicationManagerService.publish(inflightEvent);
-            return new ResponseEntity<Object>(inflightEvent, HttpStatus.CREATED);
+            EventToPublisher eventToPublisher = publicationAdapterService.publish(eventFromPublisher);
+            return new ResponseEntity<Object>(eventToPublisher, HttpStatus.CREATED);
         } catch (BrokerException ex) {
             // If error is a BrokerException, the error should already have been logged
             //LOGGER.error(ex.getMessage(), ex);

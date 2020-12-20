@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 // @CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequestMapping(value = "/tests/subscriber1", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-public class TestSubscriber1Controller {
+public class TestSubscriber1RestController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestSubscriber1Controller.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestSubscriber1RestController.class);
 
     @PostMapping(value = "/nominal", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAuthority('SCOPE_test_subscriber_oauth2.webhooks')")

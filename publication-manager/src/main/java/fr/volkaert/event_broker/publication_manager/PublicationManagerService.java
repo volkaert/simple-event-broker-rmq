@@ -5,6 +5,7 @@ import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.EventType;
 import fr.volkaert.event_broker.model.InflightEvent;
 import fr.volkaert.event_broker.model.Publication;
+import fr.volkaert.event_broker.publication_manager.config.BrokerConfig;
 import fr.volkaert.event_broker.telemetry.TelemetryService;
 import fr.volkaert.event_broker.util.RabbitMQNames;
 import org.slf4j.Logger;

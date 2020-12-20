@@ -1,5 +1,6 @@
 package fr.volkaert.event_broker.test_server;
 
+import fr.volkaert.event_broker.test_server.config.TestServerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

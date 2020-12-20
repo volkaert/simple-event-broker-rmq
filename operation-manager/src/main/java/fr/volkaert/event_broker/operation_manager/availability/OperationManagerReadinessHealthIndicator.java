@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.operation_manager.availability;
 
-import fr.volkaert.event_broker.operation_manager.BrokerConfig;
+import fr.volkaert.event_broker.operation_manager.config.BrokerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

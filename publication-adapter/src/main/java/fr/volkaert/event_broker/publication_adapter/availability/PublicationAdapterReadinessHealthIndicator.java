@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.publication_adapter.availability;
 
-import fr.volkaert.event_broker.publication_adapter.BrokerConfig;
+import fr.volkaert.event_broker.publication_adapter.config.BrokerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

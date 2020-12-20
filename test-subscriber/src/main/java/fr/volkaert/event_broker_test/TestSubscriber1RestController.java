@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping(value = "/tests/subscriber1", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-public class TestSubscriber1Controller {
+public class TestSubscriber1RestController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestSubscriber1Controller.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestSubscriber1RestController.class);
 
 
     @PostMapping(value = "/nominal", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

@@ -1,4 +1,4 @@
-package fr.volkaert.event_broker.operation_manager;
+package fr.volkaert.event_broker.operation_manager.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

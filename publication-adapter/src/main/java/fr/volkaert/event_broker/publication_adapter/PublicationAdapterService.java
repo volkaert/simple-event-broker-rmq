@@ -2,6 +2,7 @@ package fr.volkaert.event_broker.publication_adapter;
 
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.InflightEvent;
+import fr.volkaert.event_broker.publication_adapter.config.BrokerConfig;
 import fr.volkaert.event_broker.publication_adapter.model.EventFromPublisher;
 import fr.volkaert.event_broker.publication_adapter.model.EventToPublisher;
 import org.slf4j.Logger;

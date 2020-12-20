@@ -1,4 +1,4 @@
-package fr.volkaert.event_broker.subscription_adapter;
+package fr.volkaert.event_broker.subscription_adapter.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -1,9 +1,8 @@
-package fr.volkaert.event_broker.publication_adapter;
+package fr.volkaert.event_broker.subscription_adapter;
 
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
-import fr.volkaert.event_broker.publication_adapter.model.EventFromPublisher;
-import fr.volkaert.event_broker.publication_adapter.model.EventToPublisher;
+import fr.volkaert.event_broker.model.InflightEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,22 +14,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/events")
-public class PublicationAdapterController {
+@RequestMapping("/webhooks")
+public class SubscriptionAdapterRestController {
 
     @Autowired
-    BrokerConfig config;
+    SubscriptionAdapterService service;
 
-    @Autowired
-    PublicationAdapterService publicationAdapterService;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublicationAdapterController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionAdapterRestController.class);
 
     @PostMapping
-    public ResponseEntity<Object> publish(@RequestBody EventFromPublisher eventFromPublisher) {
+    public ResponseEntity<Object> callWebhook(@RequestBody InflightEvent inflightEvent) {
         try {
-            EventToPublisher eventToPublisher = publicationAdapterService.publish(eventFromPublisher);
-            return new ResponseEntity<Object>(eventToPublisher, HttpStatus.CREATED);
+            InflightEvent returnedInflightEvent = service.callWebhook(inflightEvent);
+            return new ResponseEntity<Object>(returnedInflightEvent, HttpStatus.OK);
         } catch (BrokerException ex) {
             // If error is a BrokerException, the error should already have been logged
             //LOGGER.error(ex.getMessage(), ex);
