@@ -452,7 +452,7 @@ curl "http://localhost:8100/tests/nominal/sub/slowdown?testId=123456789&pause=10
 ```
 
 ```
-curl "http://localhost:8100/tests/nominal/pub/run?n=60&pause=1000&timeToLiveInSeconds=120"
+curl "http://localhost:8100/tests/nominal/pub/run?n=10&pause=1000&timeToLiveInSeconds=30"
 curl http://localhost:8100/tests/nominal/sub/reject
 curl http://localhost:8100/tests/nominal/sub/accept
 curl http://localhost:8100/tests/nominal/pub/stop
@@ -498,6 +498,30 @@ The `TestServer` module generates the following metrics (at the `/actuator/prome
 - `test_event_missing_or_unordered_total`
 - `test_event_counts_mismatch_total`
 
+
+## Operation Manager
+
+The `OperationManager` offers various operations for support and maintenance on the broker (such as
+get the last event blocked in a queue, delete the last event blocked in a queue, delete all events in a queue... ).
+
+
+### Commands:
+The `OperationManager` module accepts the following commands:
+- `GET /subscriptions/{subscriptionCode}/events/last`: get the last event in the queue for a given subscription.
+- `DELETE /subscriptions/{subscriptionCode}/events/last`: delete the last event in the queue for a given subscription.
+- `DELETE /subscriptions/{subscriptionCode}/events`: delete all events in the queue for a given subscription.
+
+>Planned enhancements: get info about a queue...
+
+>TODO: reactivate the security module (disabled for tests)
+> 
+### Examples
+Examples (with the `nominal` test):
+```
+curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/last
+curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/last
+curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events
+```
 
 
 ## Misc

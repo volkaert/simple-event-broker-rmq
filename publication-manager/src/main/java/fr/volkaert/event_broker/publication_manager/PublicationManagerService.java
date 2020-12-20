@@ -6,6 +6,7 @@ import fr.volkaert.event_broker.model.EventType;
 import fr.volkaert.event_broker.model.InflightEvent;
 import fr.volkaert.event_broker.model.Publication;
 import fr.volkaert.event_broker.telemetry.TelemetryService;
+import fr.volkaert.event_broker.util.RabbitMQNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -52,21 +53,11 @@ public class PublicationManagerService {
         telemetryService.eventPublicationAttempted(inflightEvent);
         try {
             String eventTypeCode = inflightEvent.getEventTypeCode();    // filled in checkConditionsForEventPublicationAreMetOrReject
-            String topicExchangeName = "X_" + eventTypeCode;
+            String topicExchangeName = RabbitMQNames.getExchangeNameForEventType(eventTypeCode);
             rabbitTemplate.convertAndSend(topicExchangeName, null, inflightEvent, message -> {
                 message.getMessageProperties().setExpiration(Long.toString(inflightEvent.getTimeToLiveInSeconds() * 1000));
                 return message;
             });
-
-            // Another way to send Message as JSON object:
-            /*
-            String orderJson = objectMapper.writeValueAsString(order);
-            Message message = MessageBuilder
-                    .withBody(orderJson.getBytes())
-                    .setContentType(MessageProperties.CONTENT_TYPE_JSON)
-                    .build();
-            this.rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_ORDERS, message);
-            */
 
             telemetryService.eventPublicationSucceeded(inflightEvent, publicationStart);
         } catch (Exception ex) {

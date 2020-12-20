@@ -1,16 +1,22 @@
 package fr.volkaert.event_broker.subscription_manager;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.GetResponse;
 import fr.volkaert.event_broker.catalog_adapter_client.CatalogAdapterClient;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.EventType;
 import fr.volkaert.event_broker.model.InflightEvent;
 import fr.volkaert.event_broker.model.Subscription;
 import fr.volkaert.event_broker.telemetry.TelemetryService;
+import fr.volkaert.event_broker.util.RabbitMQNames;
+import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.ChannelCallback;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
@@ -20,6 +26,7 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,6 +37,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,8 +53,8 @@ public class SubscriptionManagerService {
     @Autowired
     CatalogAdapterClient catalog;
 
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    //@Autowired
+    //RabbitTemplate rabbitTemplate;
 
     @Autowired
     RabbitAdmin rabbitAdmin;
@@ -114,9 +122,8 @@ public class SubscriptionManagerService {
 
         SimpleMessageListenerContainer rabbitMQListenerContainer = subscriptionCodeToRabbitMQConsumerMap.computeIfAbsent(subscriptionCode, x -> {
             try {
-                String exchangeNameForEventTypeCode = "X_" + eventTypeCode;
-                String exchangeNameForSubscriptionCode = "X_" + subscriptionCode;
-                String queueNameForSubscriptionCode = "Q_" + subscriptionCode;
+                String exchangeNameForEventType = RabbitMQNames.getExchangeNameForEventType(eventTypeCode);
+                String queueNameForSubscription = RabbitMQNames.getQueueNameForSubscription(subscriptionCode);
                 //String nameForDeadLetterExchange = "DLX_" + subscriptionCode;
                 //String nameForDeadLetterQueue = "DLQ_" + subscriptionCode;
                 //String nameForRetryExchange = "RX_" + subscriptionCode;
@@ -124,17 +131,17 @@ public class SubscriptionManagerService {
 
                 // NOMINAL **********
 
-                Exchange exchangeForEventTypeCode = ExchangeBuilder.fanoutExchange(exchangeNameForEventTypeCode).durable(true).build();
-                rabbitAdmin.declareExchange(exchangeForEventTypeCode);
+                Exchange exchangeForEventType = ExchangeBuilder.fanoutExchange(exchangeNameForEventType).durable(true).build();
+                rabbitAdmin.declareExchange(exchangeForEventType);
 
-                Queue queueForSubscriptionCode = QueueBuilder
-                        .durable(queueNameForSubscriptionCode)
+                Queue queueForSubscription = QueueBuilder
+                        .durable(queueNameForSubscription)
                         //.withArgument("x-dead-letter-exchange", nameForDeadLetterExchange)
                         //.withArgument("x-dead-letter-routing-key", nameForDeadLetterQueue)
                         .build();
-                rabbitAdmin.declareQueue(queueForSubscriptionCode);
+                rabbitAdmin.declareQueue(queueForSubscription);
 
-                Binding binding = BindingBuilder.bind(queueForSubscriptionCode).to(exchangeForEventTypeCode).with(queueNameForSubscriptionCode).noargs();
+                Binding binding = BindingBuilder.bind(queueForSubscription).to(exchangeForEventType).with(queueNameForSubscription).noargs();
                 rabbitAdmin.declareBinding(binding);
 
                 // DEAD LETTER **********
@@ -179,7 +186,7 @@ public class SubscriptionManagerService {
                 Object rabbitMQListener = (ChannelAwareMessageListener) (message, channel) -> {
                     // Since all errors are handled by handleRabbitMQMessage(), NEVER LET AN EXCEPTION BE RAISED HERE !!!
                     try {
-                        InflightEvent inflightEvent = (InflightEvent) jackson2JsonMessageConverter.fromMessage(message);
+                        InflightEvent inflightEvent = (InflightEvent)jackson2JsonMessageConverter.fromMessage(message);
                         handleRabbitMQMessage(inflightEvent, eventTypeCode, subscriptionCode, message, channel);
                     } catch (Exception ex) {
                         LOGGER.error("Unexpected error while handling RabbitMQ message", ex);
@@ -194,7 +201,7 @@ public class SubscriptionManagerService {
                 container.setForceCloseChannel(true);
                 container.setShutdownTimeout(0);
                 container.setMessageListener(rabbitMQListenerAdapter);
-                container.setQueueNames(queueNameForSubscriptionCode);
+                container.setQueueNames(queueNameForSubscription);
                 container.setDefaultRequeueRejected(defaultRequeueRejected);
                 container.setConcurrentConsumers(1);
                 container.setMaxConcurrentConsumers(1);

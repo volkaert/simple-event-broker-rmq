@@ -17,6 +17,7 @@
         <module>probe</module>
         <module>test-server</module>
         <module>catalog-adapter</module>
+        <module>operation-manager</module>
     </modules>
 
     <parent>
