@@ -28,6 +28,9 @@ public class BrokerConfig {
     private long defaultTimeToLiveInSecondsForWebhookClient4xxError;
     private long defaultTimeToLiveInSecondsForWebhookAuth401Or403Error;
 
+    private long timeToLiveInSecondsForDeadLetterQueues;    // TTL set during queue declaration so cannot be changed afterwards
+    private long timeToLiveInSecondsForDeadLetterMessages;  // TTL set at the message level so can be changed independently of the timeToLiveInSecondsForDeadLetterQueues
+
     // Cluster size is the number of SubscriptionManager instances and Cluster index is the index of this
     // SubscriptionManager instance within the cluster.
     // Cluster index must  be ***UNIQUE*** within the cluster and must follow the sequence 0, 1... < Cluster size.

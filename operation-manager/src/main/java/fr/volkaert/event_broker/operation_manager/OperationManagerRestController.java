@@ -19,22 +19,22 @@ public class OperationManagerRestController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OperationManagerRestController.class);
 
-    @GetMapping(value="/subscriptions/{subscriptionCode}/events/last", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<InflightEvent> getLastEventForSubscription(@PathVariable String subscriptionCode) {
-        LOGGER.info("GET /subscriptions/{}/events/last called", subscriptionCode);
+    @GetMapping(value="/subscriptions/{subscriptionCode}/events/next", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<InflightEvent> getNextEventForSubscription(@PathVariable String subscriptionCode) {
+        LOGGER.info("GET /subscriptions/{}/events/next called", subscriptionCode);
         try {
-            return ResponseEntity.ok(service.getLastEventForSubscription(subscriptionCode));
+            return ResponseEntity.ok(service.getNextEventForSubscription(subscriptionCode));
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
             return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @DeleteMapping(value="/subscriptions/{subscriptionCode}/events/last", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<InflightEvent> deleteLastEventForSubscription(@PathVariable String subscriptionCode) {
-        LOGGER.info("DELETE /subscriptions/{}/events/last called", subscriptionCode);
+    @DeleteMapping(value="/subscriptions/{subscriptionCode}/events/next", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<InflightEvent> deleteNextEventForSubscription(@PathVariable String subscriptionCode) {
+        LOGGER.info("DELETE /subscriptions/{}/events/next called", subscriptionCode);
         try {
-            return ResponseEntity.ok(service.deleteLastEventForSubscription(subscriptionCode));
+            return ResponseEntity.ok(service.deleteNextEventForSubscription(subscriptionCode));
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
             return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -46,6 +46,40 @@ public class OperationManagerRestController {
         LOGGER.info("DELETE /subscriptions/{}/events called", subscriptionCode);
         try {
             service.deleteAllEventsForSubscription(subscriptionCode);
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(value="/subscriptions/{subscriptionCode}/dead-letter-queue/events/next", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<InflightEvent> getNextEventInDeadlLetterQueueForSubscription(@PathVariable String subscriptionCode) {
+        LOGGER.info("GET /subscriptions/{}/dead-letter-queue/events/next called", subscriptionCode);
+        try {
+            return ResponseEntity.ok(service.getNextEventInDeadLetterQueueForSubscription(subscriptionCode));
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(value="/subscriptions/{subscriptionCode}/dead-letter-queue/events/next", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<InflightEvent> deleteNextEventInDeadLetterQueueForSubscription(@PathVariable String subscriptionCode) {
+        LOGGER.info("DELETE /subscriptions/{}/dead-letter-queue/events/next called", subscriptionCode);
+        try {
+            return ResponseEntity.ok(service.deleteNextEventInDeadLetterQueueForSubscription(subscriptionCode));
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(value="/subscriptions/{subscriptionCode}/dead-letter-queue/events", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> deleteAllEventsInDeadLetterQueueForSubscription(@PathVariable String subscriptionCode) {
+        LOGGER.info("DELETE /subscriptions/{}/dead-letter-queue/events called", subscriptionCode);
+        try {
+            service.deleteAllEventsInDeadLetterQueueForSubscription(subscriptionCode);
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);

@@ -13,8 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
@@ -132,23 +131,19 @@ public class SubscriptionAdapterService {
             LOGGER.debug("Returning the event {}", inflightEvent.cloneWithoutSensitiveData());
             return inflightEvent;
 
-        } catch (HttpClientErrorException ex) {
-            String msg = String.format("Client error %s while calling the webhook at %s. Event is %s.",
+        } catch (HttpStatusCodeException ex) {
+            String msg = String.format("Error %s while calling the webhook at %s. Event is %s.",
                     ex.getStatusCode(), inflightEvent.getWebhookUrl(), inflightEvent.toShortLog());
             LOGGER.error(msg, ex);
 
-            inflightEvent.setWebhookClient4xxErrorOccurred(true);
             inflightEvent.setWebhookHttpStatus(ex.getStatusCode().value());
-            LOGGER.debug("Returning the event {}", inflightEvent.cloneWithoutSensitiveData());
-            return inflightEvent;
+            if (ex.getStatusCode().is4xxClientError())
+                inflightEvent.setWebhookClient4xxErrorOccurred(true);
+            else if (ex.getStatusCode().is5xxServerError())
+                inflightEvent.setWebhookServer5xxErrorOccurred(true);
+            else if (ex.getStatusCode().is3xxRedirection())
+                inflightEvent.setWebhookRedirection3xxErrorOccurred(true);
 
-        } catch (HttpServerErrorException ex) {
-            String msg = String.format("Server error %s while calling the webhook at %s. Event is %s.",
-                    ex.getStatusCode(), inflightEvent.getWebhookUrl(), inflightEvent.toShortLog());
-            LOGGER.error(msg, ex);
-
-            inflightEvent.setWebhookServer5xxErrorOccurred(true);
-            inflightEvent.setWebhookHttpStatus(ex.getStatusCode().value());
             LOGGER.debug("Returning the event {}", inflightEvent.cloneWithoutSensitiveData());
             return inflightEvent;
 

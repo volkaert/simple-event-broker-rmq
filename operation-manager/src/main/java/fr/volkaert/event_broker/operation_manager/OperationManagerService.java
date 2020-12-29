@@ -28,16 +28,23 @@ public class OperationManagerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OperationManagerService.class);
 
-    public InflightEvent getLastEventForSubscription(String subscriptionCode) {
-        return getOrDeleteLastEventForSubscription(subscriptionCode, false);
+    /*
+    TODO
+    QueueInformation qi = rabbitAdmin.getRabbitTemplate().getggetQueueInfo(null);
+                this.rabbitRestClient = new Client("http://localhost:15672/api/", "guest", "guest");
+    QueueInfo qi = this.rabbitRestClient.getQueue("/", queue1.getName());
+    */
+
+    public InflightEvent getNextEventForSubscription(String subscriptionCode) {
+        return getOrDeleteNextEventForSubscription(subscriptionCode, false);
     }
 
-    public InflightEvent deleteLastEventForSubscription(String subscriptionCode) {
-        return getOrDeleteLastEventForSubscription(subscriptionCode, true);
+    public InflightEvent deleteNextEventForSubscription(String subscriptionCode) {
+        return getOrDeleteNextEventForSubscription(subscriptionCode, true);
     }
 
-    private InflightEvent getOrDeleteLastEventForSubscription(String subscriptionCode, boolean ack) {
-        InflightEvent lastEvent = null;
+    private InflightEvent getOrDeleteNextEventForSubscription(String subscriptionCode, boolean ack) {
+        InflightEvent event = null;
         String queueNameForSubscription = RabbitMQNames.getQueueNameForSubscription(subscriptionCode);
         MyRabbitTemplate rabbitTemplate = new MyRabbitTemplate(rabbitMQConnectionFactory);
         rabbitTemplate.setMessageConverter(jackson2JsonMessageConverter);
@@ -56,13 +63,51 @@ public class OperationManagerService {
         });
         rabbitTemplate.destroy();
         if (message != null) {
-            lastEvent = (InflightEvent)jackson2JsonMessageConverter.fromMessage(message);
+            event = (InflightEvent)jackson2JsonMessageConverter.fromMessage(message);
         }
-        return lastEvent;
+        return event;
     }
 
     public void deleteAllEventsForSubscription(String subscriptionCode) {
-        while (deleteLastEventForSubscription(subscriptionCode) != null) {
+        while (deleteNextEventForSubscription(subscriptionCode) != null) {
+        }
+    }
+
+    public InflightEvent getNextEventInDeadLetterQueueForSubscription(String subscriptionCode) {
+        return getOrDeleteNextEventInDeadLetterQueueForSubscription(subscriptionCode, false);
+    }
+
+    public InflightEvent deleteNextEventInDeadLetterQueueForSubscription(String subscriptionCode) {
+        return getOrDeleteNextEventInDeadLetterQueueForSubscription(subscriptionCode, true);
+    }
+
+    private InflightEvent getOrDeleteNextEventInDeadLetterQueueForSubscription(String subscriptionCode, boolean ack) {
+        InflightEvent event = null;
+        String deadLetterQueueNameForSubscription = RabbitMQNames.getDeadLetterQueueNameForSubscription(subscriptionCode);
+        MyRabbitTemplate rabbitTemplate = new MyRabbitTemplate(rabbitMQConnectionFactory);
+        rabbitTemplate.setMessageConverter(jackson2JsonMessageConverter);
+        Message message = rabbitTemplate.execute(channel -> {
+            GetResponse response = channel.basicGet(deadLetterQueueNameForSubscription, ack);
+            if (response != null) {
+                long deliveryTag = response.getEnvelope().getDeliveryTag();
+                if (ack)
+                    channel.basicAck(deliveryTag, false);   // false: ack of the last message only
+                else
+                    channel.basicReject(deliveryTag, true); // true: requeue the last message
+                Message msg = rabbitTemplate.myOwnBuildMessageFromResponse(response);
+                return msg;
+            }
+            return null;
+        });
+        rabbitTemplate.destroy();
+        if (message != null) {
+            event = (InflightEvent) jackson2JsonMessageConverter.fromMessage(message);
+        }
+        return event;
+    }
+
+    public void deleteAllEventsInDeadLetterQueueForSubscription(String subscriptionCode) {
+        while (deleteNextEventInDeadLetterQueueForSubscription(subscriptionCode) != null) {
         }
     }
 

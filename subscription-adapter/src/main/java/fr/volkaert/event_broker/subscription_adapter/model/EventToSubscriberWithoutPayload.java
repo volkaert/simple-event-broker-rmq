@@ -22,8 +22,8 @@ public class EventToSubscriberWithoutPayload {
     protected Instant expirationDate;
     protected String eventTypeCode;
     protected String subscriptionCode;
-    protected String secret;  // @Todo: to handle properly
+    protected String secret;
 
-   protected  boolean redelivered;    // @Todo: to handle properly
+    protected  boolean redelivered;
     protected int redeliveryCount;
 }

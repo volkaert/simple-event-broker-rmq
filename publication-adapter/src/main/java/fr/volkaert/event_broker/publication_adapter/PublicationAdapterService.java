@@ -12,8 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -62,14 +61,8 @@ public class PublicationAdapterService {
             LOGGER.debug("Returning the event {}", eventToPublisher);
             return eventToPublisher;
 
-        } catch (HttpClientErrorException ex) {
-            String msg = String.format("Client error %s while calling the Publication Manager at %s. Event is %s.",
-                    ex.getStatusCode(), publicationManagerUrl, inflightEvent.toShortLog());
-            LOGGER.error(msg, ex);
-            throw new BrokerException(ex.getStatusCode(), msg, ex, publicationManagerUrl);
-
-        } catch (HttpServerErrorException ex) {
-            String msg = String.format("Server error %s while calling the Publication Manager at %s. Event is %s.",
+        } catch (HttpStatusCodeException ex) {
+            String msg = String.format("Error %s while calling the Publication Manager at %s. Event is %s.",
                     ex.getStatusCode(), publicationManagerUrl, inflightEvent.toShortLog());
             LOGGER.error(msg, ex);
             throw new BrokerException(ex.getStatusCode(), msg, ex, publicationManagerUrl);

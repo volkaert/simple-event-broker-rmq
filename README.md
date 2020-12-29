@@ -502,14 +502,17 @@ The `TestServer` module generates the following metrics (at the `/actuator/prome
 ## Operation Manager
 
 The `OperationManager` offers various operations for support and maintenance on the broker (such as
-get the last event blocked in a queue, delete the last event blocked in a queue, delete all events in a queue... ).
+get the event blocked in a queue, delete the event blocked in a queue, delete all events in a queue... ).
 
 
 ### Commands:
 The `OperationManager` module accepts the following commands:
-- `GET /subscriptions/{subscriptionCode}/events/last`: get the last event in the queue for a given subscription.
-- `DELETE /subscriptions/{subscriptionCode}/events/last`: delete the last event in the queue for a given subscription.
+- `GET /subscriptions/{subscriptionCode}/events/next`: get the next (=blocked) event in the queue for a given subscription.
+- `DELETE /subscriptions/{subscriptionCode}/events/next`: delete the next (=blocked) event in the queue for a given subscription.
 - `DELETE /subscriptions/{subscriptionCode}/events`: delete all events in the queue for a given subscription.
+- `GET /subscriptions/{subscriptionCode}/dead-letter-queue/events/next`: get the next event in the dead letter queue for a given subscription.
+- `DELETE /subscriptions/{subscriptionCode}/dead-letter-queue/events/next`: delete the next event in the dead letter queue for a given subscription.
+- `DELETE /subscriptions/{subscriptionCode}/dead-letter-queue/events`: delete all events in the dead letter queue for a given subscription.
 
 >Planned enhancements: get info about a queue...
 
@@ -518,9 +521,12 @@ The `OperationManager` module accepts the following commands:
 ### Examples
 Examples (with the `nominal` test):
 ```
-curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/last
-curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/last
+curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/next
+curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/next
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events
+curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
+curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
+curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events
 ```
 
 
