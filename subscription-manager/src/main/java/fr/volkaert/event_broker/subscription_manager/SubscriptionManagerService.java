@@ -491,4 +491,13 @@ public class SubscriptionManagerService {
         int indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent = eventTypeCode.hashCode() % config.getClusterSize();
         return indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent == config.getClusterIndex();
     }
+
+    public void activateEventProcessing() {
+        config.setEventProcessingActive(true);
+        LOGGER.info("Event processing is now active");
+    }
+    public void deactivateEventProcessing() {
+        config.setEventProcessingActive(false);
+        LOGGER.info("Event processing is now NOT active");
+    }
 }

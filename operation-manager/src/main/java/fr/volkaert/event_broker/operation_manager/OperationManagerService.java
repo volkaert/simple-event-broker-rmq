@@ -19,7 +19,11 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Iterator;
 
@@ -39,6 +43,10 @@ public class OperationManagerService {
 
     private Client rabbitMQClient;
     private Object rabbitMQClientLock = new Object();
+
+    @Autowired
+    @Qualifier("RestTemplateForSubscriptionManager")
+    RestTemplate restTemplateForSubscriptionManager;
 
     public InflightEvent getNextEventForSubscription(String subscriptionCode) {
         return getOrDeleteNextEventForSubscription(subscriptionCode, false);
@@ -170,5 +178,17 @@ public class OperationManagerService {
             }
             return rabbitMQClient;
         }
+    }
+
+    public String activateEventProcessing() {
+        String query = String.format("%s/event-processing/activate", config.getSubscriptionManagerUrl());
+        ResponseEntity<String> responseEntity = restTemplateForSubscriptionManager.exchange(query, HttpMethod.POST, null, String.class);
+        return responseEntity.getBody();
+    }
+
+    public String deactivateEventProcessing() {
+        String query = String.format("%s/event-processing/deactivate", config.getSubscriptionManagerUrl());
+        ResponseEntity<String> responseEntity = restTemplateForSubscriptionManager.exchange(query, HttpMethod.POST, null, String.class);
+        return responseEntity.getBody();
     }
 }

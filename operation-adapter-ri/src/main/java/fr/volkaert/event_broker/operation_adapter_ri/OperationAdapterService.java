@@ -83,4 +83,16 @@ public class OperationAdapterService {
         OverviewResponse overview = responseEntity.getBody();
         return overview;
     }
+
+    public String activateEventProcessing() {
+        String query = String.format("%s/event-processing/activate", config.getOperationManagerUrl());
+        ResponseEntity<String> responseEntity = restTemplate.exchange(query, HttpMethod.POST, null, String.class);
+        return responseEntity.getBody();
+    }
+
+    public String deactivateEventProcessing() {
+        String query = String.format("%s/event-processing/deactivate", config.getOperationManagerUrl());
+        ResponseEntity<String> responseEntity = restTemplate.exchange(query, HttpMethod.POST, null, String.class);
+        return responseEntity.getBody();
+    }
 }

@@ -533,6 +533,8 @@ The `OperationManager` module accepts the following commands:
 - `DELETE /subscriptions/{subscriptionCode}/dead-letter-queue/events`: delete all events in the dead letter queue for a given subscription.
 - `GET /subscriptions/{subscriptionCode}/rabbitmq/queue/info`: get info on the RabbitMQ queue for a given subscription.
 - `GET /rabbitmq/overview`: get an overview of the RabbitMQ broker.
+- `POST /event-processing/activate`: activate the event processing (in the `SubscriptionManager`)
+- `POST /event-processing/deactivate`: deactivate the event processing (in the `SubscriptionManager`)
 
 
 ### Examples
@@ -544,8 +546,13 @@ curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SU
 curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events
+```
+
+```
 curl http://localhost:34379/subscriptions/TestServer-Nominal-SUB/rabbitmq/queue/info
 curl http://localhost:34379/rabbitmq/overview
+curl --request POST http://localhost:34379/event-processing/activate
+curl --request POST http://localhost:34379/event-processing/deactivate
 ```
 
 

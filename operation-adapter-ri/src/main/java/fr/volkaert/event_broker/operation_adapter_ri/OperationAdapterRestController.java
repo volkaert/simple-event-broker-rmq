@@ -110,4 +110,26 @@ public class OperationAdapterRestController {
             return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PostMapping(value="/event-processing/activate", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> activateEventProcessing() {
+        LOGGER.info("POST /event-processing/activate called");
+        try {
+            return ResponseEntity.ok(service.activateEventProcessing());
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping(value="/event-processing/deactivate", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> deactivateEventProcessing() {
+        LOGGER.info("POST /event-processing/deactivate called");
+        try {
+            return ResponseEntity.ok(service.deactivateEventProcessing());
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
