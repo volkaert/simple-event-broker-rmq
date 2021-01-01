@@ -43,6 +43,8 @@ public class RabbitConfig implements RabbitListenerConfigurer {
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory =
                 new CachingConnectionFactory(config.getRabbitMQHost(), config.getRabbitMQPort());
+        connectionFactory.setUsername(config.getRabbitMQUsername());
+        connectionFactory.setUsername(config.getRabbitMQPassword());
         return connectionFactory;
     }
 

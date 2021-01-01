@@ -17,6 +17,8 @@ public class BrokerConfig {
 
     private String rabbitMQHost;
     private int rabbitMQPort;
+    private String rabbitMQUsername;
+    private String rabbitMQPassword;
 
     private String subscriptionAdapterUrl;
     private String authClientIdForSubscriptionAdapter;
