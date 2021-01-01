@@ -1,5 +1,7 @@
 package fr.volkaert.event_broker.operation_manager;
 
+import com.rabbitmq.http.client.domain.OverviewResponse;
+import com.rabbitmq.http.client.domain.QueueInfo;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
 import fr.volkaert.event_broker.model.InflightEvent;
 import org.slf4j.Logger;
@@ -81,6 +83,28 @@ public class OperationManagerRestController {
         try {
             service.deleteAllEventsInDeadLetterQueueForSubscription(subscriptionCode);
             return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(value="/subscriptions/{subscriptionCode}/rabbitmq/queue/info", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<QueueInfo> getRabbitMQQueueInfoForSubscription(@PathVariable String subscriptionCode) {
+        LOGGER.info("GET /subscriptions/{}/rabbitmq/queue/info called", subscriptionCode);
+        try {
+            return ResponseEntity.ok(service.getRabbitMQQueueInfoForSubscription(subscriptionCode));
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(value="/rabbitmq/overview", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OverviewResponse> getRabbitMQOverview() {
+        LOGGER.info("GET /rabbitmq/overview called");
+        try {
+            return ResponseEntity.ok(service.getRabbitMQOverview());
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
             return new ResponseEntity(new BrokerExceptionResponse(ex), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -11,6 +11,9 @@ public class BrokerConfig {
 
     private String rabbitMQHost;
     private int rabbitMQPort;
+    private String rabbitMQPortForHttpApi;
+    private String rabbitMQUsername;
+    private String rabbitMQPassword;
 
     private String catalogAdapterUrl;
 

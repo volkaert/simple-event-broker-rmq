@@ -17,6 +17,13 @@
             <artifactId>commons</artifactId>
             <version>${broker.commons.version}</version>
         </dependency>
+
+        <!-- https://github.com/rabbitmq/hop -->
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>http-client</artifactId>
+            <version>3.9.0.RELEASE</version>
+        </dependency>
     </dependencies>
 
     <build>

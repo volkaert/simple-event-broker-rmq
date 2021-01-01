@@ -3,7 +3,12 @@ package fr.volkaert.event_broker.operation_manager;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.http.client.Client;
+import com.rabbitmq.http.client.ClientParameters;
+import com.rabbitmq.http.client.domain.OverviewResponse;
+import com.rabbitmq.http.client.domain.QueueInfo;
 import fr.volkaert.event_broker.model.InflightEvent;
+import fr.volkaert.event_broker.operation_manager.config.BrokerConfig;
 import fr.volkaert.event_broker.util.RabbitMQNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +25,10 @@ import java.util.Iterator;
 
 @Service
 public class OperationManagerService {
+
+    @Autowired
+    BrokerConfig config;
+
     @Autowired
     ConnectionFactory rabbitMQConnectionFactory;
 
@@ -28,12 +37,8 @@ public class OperationManagerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OperationManagerService.class);
 
-    /*
-    TODO
-    QueueInformation qi = rabbitAdmin.getRabbitTemplate().getggetQueueInfo(null);
-                this.rabbitRestClient = new Client("http://localhost:15672/api/", "guest", "guest");
-    QueueInfo qi = this.rabbitRestClient.getQueue("/", queue1.getName());
-    */
+    private Client rabbitMQClient;
+    private Object rabbitMQClientLock = new Object();
 
     public InflightEvent getNextEventForSubscription(String subscriptionCode) {
         return getOrDeleteNextEventForSubscription(subscriptionCode, false);
@@ -133,6 +138,37 @@ public class OperationManagerService {
                 }
             }
             return message;
+        }
+    }
+
+    public QueueInfo getRabbitMQQueueInfoForSubscription(String subscriptionCode) {
+        // QueueInformation qi = rabbitAdmin.getRabbitTemplate().getggetQueueInfo(null);
+        String queueNameForSubscription = RabbitMQNames.getQueueNameForSubscription(subscriptionCode);
+        Client rabbitMQClient = getRabbitMQClient();
+        QueueInfo queueInfo = rabbitMQClient.getQueue("/", queueNameForSubscription);
+        return queueInfo;
+    }
+
+    public OverviewResponse getRabbitMQOverview() {
+        Client rabbitMQClient = getRabbitMQClient();
+        OverviewResponse overview = rabbitMQClient.getOverview();
+        return overview;
+    }
+
+    private Client getRabbitMQClient() {
+        synchronized (rabbitMQClientLock) {
+            if (rabbitMQClient == null) {
+                try {
+                    String urlForHttpAPi = String.format("http://%s:%s/api", config.getRabbitMQHost(), config.getRabbitMQPortForHttpApi());
+                    rabbitMQClient = new Client(new ClientParameters()
+                            .url(urlForHttpAPi)
+                            .username(config.getRabbitMQUsername())
+                            .password(config.getRabbitMQPassword()));
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex.getMessage(), ex);
+                }
+            }
+            return rabbitMQClient;
         }
     }
 }

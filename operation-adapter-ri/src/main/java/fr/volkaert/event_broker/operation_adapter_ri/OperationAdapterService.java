@@ -1,5 +1,7 @@
 package fr.volkaert.event_broker.operation_adapter_ri;
 
+import com.rabbitmq.http.client.domain.OverviewResponse;
+import com.rabbitmq.http.client.domain.QueueInfo;
 import fr.volkaert.event_broker.model.EventToSubscriber;
 import fr.volkaert.event_broker.model.InflightEvent;
 import fr.volkaert.event_broker.operation_adapter_ri.config.BrokerConfig;
@@ -11,6 +13,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Queue;
 
 @Service
 public class OperationAdapterService {
@@ -64,5 +68,19 @@ public class OperationAdapterService {
     public void deleteAllEventsInDeadlLetterQueueForSubscription(String subscriptionCode) {
         String query = String.format("%s/subscriptions/%s/dead-letter-queue/events", config.getOperationManagerUrl(), subscriptionCode);
         restTemplate.exchange(query, HttpMethod.DELETE, null, Void.class);
+    }
+
+    public QueueInfo getRabbitMQQueueInfoForSubscription(String subscriptionCode) {
+        String query = String.format("%s/subscriptions/%s/rabbitmq/queue/info", config.getOperationManagerUrl(), subscriptionCode);
+        ResponseEntity<QueueInfo> responseEntity = restTemplate.exchange(query, HttpMethod.GET, null, QueueInfo.class);
+        QueueInfo queueInfo = responseEntity.getBody();
+        return queueInfo;
+    }
+
+    public OverviewResponse getRabbitMQQueueOverview() {
+        String query = String.format("%s/rabbitmq/overview", config.getOperationManagerUrl());
+        ResponseEntity<OverviewResponse> responseEntity = restTemplate.exchange(query, HttpMethod.GET, null, OverviewResponse.class);
+        OverviewResponse overview = responseEntity.getBody();
+        return overview;
     }
 }

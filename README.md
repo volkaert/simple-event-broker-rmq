@@ -531,8 +531,8 @@ The `OperationManager` module accepts the following commands:
 - `GET /subscriptions/{subscriptionCode}/dead-letter-queue/events/next`: get the next event in the dead letter queue for a given subscription.
 - `DELETE /subscriptions/{subscriptionCode}/dead-letter-queue/events/next`: delete the next event in the dead letter queue for a given subscription.
 - `DELETE /subscriptions/{subscriptionCode}/dead-letter-queue/events`: delete all events in the dead letter queue for a given subscription.
-
->Planned enhancements: get info about a queue...
+- `GET /subscriptions/{subscriptionCode}/rabbitmq/queue/info`: get info on the RabbitMQ queue for a given subscription.
+- `GET /rabbitmq/overview`: get an overview of the RabbitMQ broker.
 
 
 ### Examples
@@ -544,6 +544,8 @@ curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SU
 curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events
+curl http://localhost:34379/subscriptions/TestServer-Nominal-SUB/rabbitmq/queue/info
+curl http://localhost:34379/rabbitmq/overview
 ```
 
 
