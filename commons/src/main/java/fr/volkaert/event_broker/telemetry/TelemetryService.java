@@ -227,6 +227,28 @@ public class TelemetryService {
         return msg;
     }
 
+    public synchronized String eventPublicationFailedForMirroring(InflightEvent event, Exception exception) {
+        String msg = "";
+        try {
+            msg = String.format("Event publication failed for mirroring. Exception is `%s`. Event is %s.",
+                    (exception != null ? exception.getMessage() : ""),  event.toShortLog());
+            LOGGER.error(msg, exception);
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording log for eventPublicationFailedForMirroring", ex);
+        }
+        try {
+            String publicationCode = event.getPublicationCode();
+            String eventTypeCode = event.getEventTypeCode();
+
+            Counter counter1 = meterRegistry.counter("event_publications_failed_for_mirroring_total",
+                    Tags.of("publication_code", publicationCode, "event_type_code", eventTypeCode));
+            counter1.increment();
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording metric for eventPublicationFailedForMirroring", ex);
+        }
+        return msg;
+    }
+
 
     // DELIVERY ////////////////////////////////////////////////////////////////////////////////////////////////////////
 

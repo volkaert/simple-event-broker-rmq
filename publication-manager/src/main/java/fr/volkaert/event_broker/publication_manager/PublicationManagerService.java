@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,12 @@ public class PublicationManagerService {
     CatalogAdapterClient catalog;
 
     @Autowired
+    @Qualifier("DefaultRabbitTemplate")
     RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    @Qualifier("RabbitTemplateForMirroring")
+    RabbitTemplate rabbitTemplateForMirroring;
 
     @Autowired
     TelemetryService telemetryService;
@@ -59,6 +65,10 @@ public class PublicationManagerService {
                 message.getMessageProperties().setExpiration(Long.toString(inflightEvent.getTimeToLiveInSeconds() * 1000));
                 return message;
             });
+
+            if (config.isMirroringActive()) {
+                publishToMirror(topicExchangeName, inflightEvent);
+            }
 
             telemetryService.eventPublicationSucceeded(inflightEvent, publicationStart);
         } catch (Exception ex) {
@@ -109,6 +119,18 @@ public class PublicationManagerService {
         }
         if (eventFromPublisher.getTimeToLiveInSeconds() > config.getMaxTimeToLiveInSeconds()) {
             eventFromPublisher.setTimeToLiveInSeconds(config.getMaxTimeToLiveInSeconds());
+        }
+    }
+
+    // Never let an exception be raised because of a failure for mirroring (it must not be on the critical path)
+    private void publishToMirror(String topicExchangeName, InflightEvent inflightEvent) {
+        try {
+            rabbitTemplateForMirroring.convertAndSend(topicExchangeName, null, inflightEvent, message -> {
+                message.getMessageProperties().setExpiration(Long.toString(inflightEvent.getTimeToLiveInSeconds() * 1000));
+                return message;
+            });
+        } catch (Exception ex) {
+            telemetryService.eventPublicationFailedForMirroring(inflightEvent, ex);
         }
     }
 }

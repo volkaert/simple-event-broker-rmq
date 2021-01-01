@@ -14,6 +14,13 @@ public class BrokerConfig {
     private String rabbitMQUsername;
     private String rabbitMQPassword;
 
+    private boolean mirroringActive;
+
+    private String rabbitMQHostForMirroring;
+    private int rabbitMQPortForMirroring;
+    private String rabbitMQUsernameForMirroring;
+    private String rabbitMQPasswordForMirroring;
+
     private String catalogAdapterUrl;
 
     private String componentTypeName;   // Useful for metrics (to group them by component type)
