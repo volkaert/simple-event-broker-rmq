@@ -280,7 +280,15 @@ public class SubscriptionManagerService {
 
     private boolean checkConditionsForEventDeliveryAreMetOrAbort(InflightEvent inflightEvent, Instant deliveryStart,
                                                                  Message rabbitMQMessage, Channel rabbitMQChannel) {
+
         String subscriptionCode = inflightEvent.getSubscriptionCode();
+
+        if (! config.isEventProcessingActive()) {
+            String msg = telemetryService.eventDeliveryAbortedDueToInactiveEventProcessing(inflightEvent);
+            LOGGER.warn("Event ignored because the event processing is not active (probably because we are on the backup datacenter, to avoid duplicate deliveries). " +
+                    "Event is {}.", inflightEvent.toShortLog());
+            return false; // *** PAY ATTENTION, THERE IS A RETURN HERE !!! ***
+        }
 
         Subscription subscription = catalog.getSubscription(subscriptionCode);
         if (subscription == null) {

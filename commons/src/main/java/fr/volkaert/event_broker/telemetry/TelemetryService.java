@@ -298,6 +298,30 @@ public class TelemetryService {
         return msg;
     }
 
+    public synchronized String eventDeliveryAbortedDueToInactiveEventProcessing(InflightEvent event) {
+        String msg = "";
+        try {
+            msg = String.format("Event delivery aborted due to inactive event processing. Event is %s.", event.toShortLog());
+            LOGGER.warn(msg);   // WARN and not ERROR !
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording log for eventDeliveryAbortedDueToInactiveEventProcessing", ex);
+        }
+        try {
+            String subscriptionCode = event.getSubscriptionCode();
+            String eventTypeCode = event.getEventTypeCode();
+            String publicationCode = event.getPublicationCode();
+            Counter counter1 = meterRegistry.counter("event_deliveries_aborted_total",
+                    Tags.of("subscription_code", subscriptionCode, "event_type_code", eventTypeCode, "publication_code", publicationCode));
+            counter1.increment();
+            Counter counter2 = meterRegistry.counter("event_deliveries_aborted_due_to_inactive_event_processing_total",
+                    Tags.of("subscription_code", subscriptionCode, "event_type_code", eventTypeCode, "publication_code", publicationCode));
+            counter2.increment();
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToInactiveEventProcessing", ex);
+        }
+        return msg;
+    }
+
     public synchronized String eventDeliveryAbortedDueToInvalidSubscriptionCode(InflightEvent event) {
         String msg = "";
         try {

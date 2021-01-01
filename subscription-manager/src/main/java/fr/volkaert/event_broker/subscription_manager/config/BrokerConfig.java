@@ -41,4 +41,6 @@ public class BrokerConfig {
     // For a given event type, only one instance of SubscriptionManager will manage the events.
     private int clusterSize;
     private int clusterIndex;
+
+    private boolean eventProcessingActive;  //Should be true on the primary datacenter and false on the backup datacenter (to avoid duplicate deliveries)
 }
