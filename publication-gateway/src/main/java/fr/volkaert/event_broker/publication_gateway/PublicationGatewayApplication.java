@@ -9,5 +9,4 @@ public class PublicationGatewayApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(PublicationGatewayApplication.class, args);
 	}
-
 }
