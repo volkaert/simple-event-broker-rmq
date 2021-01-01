@@ -16,6 +16,8 @@ This version uses SpringBoot and RabbitMQ.
 - Catalog Adapter. Port dynamically defined by Eureka. Name in Eureka: CatalogAdapter.
 - Test/Fake Subscriber. In dev mode, it uses port 8099.
 - Probe. In dev mode, it uses port 8100.
+- OperationManager. Port dynamically defined by Eureka. Name in Eureka: OperationManager.
+- OperationAdapter. Port dynamically defined by Eureka. Name in Eureka: OperationAdapter.
 
 A `Manager` (`PublicationManager` and `SubscriptionManager`) contains the logic of publication/subscription, the management
 of acknowledgment of message/event (either positive or negative acknowledgment), the interaction with the underlying 
@@ -320,6 +322,21 @@ cd test-subscriber
 ```
 >You should start only one instance of the Test/Fake Subscriber
 
+### Run the Operation Manager (optional)
+```
+cd operation-manager
+../mvnw clean spring-boot:run
+```
+>You should start only one instance of the Operation Manager
+
+### Run the Operation Adapter (optional)
+```
+cd operation-adapter-ri
+../mvnw clean spring-boot:run
+```
+>You should start only one instance of the Operation Adapter
+
+
 
 ## Test
 
@@ -499,6 +516,7 @@ The `TestServer` module generates the following metrics (at the `/actuator/prome
 - `test_event_counts_mismatch_total`
 
 
+
 ## Operation Manager
 
 The `OperationManager` offers various operations for support and maintenance on the broker (such as
@@ -516,8 +534,7 @@ The `OperationManager` module accepts the following commands:
 
 >Planned enhancements: get info about a queue...
 
->TODO: reactivate the security module (disabled for tests)
-> 
+
 ### Examples
 Examples (with the `nominal` test):
 ```
@@ -528,6 +545,17 @@ curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-que
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
 curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events
 ```
+
+
+
+## Operation Adapter
+
+The `OperationAdapter` offers the same operations than the `OperationManager` but returns events of the class 
+`EventToSubscriber` instead of events of the class `InflighEvent` (only Managers can handle `InflighEvent`, not Adapters).
+
+### Examples
+See the examples of the `OperationAdapter` (replace only the server host and server port).
+
 
 
 ## Misc

@@ -1,9 +1,9 @@
 package fr.volkaert.event_broker.subscription_adapter;
 
 import fr.volkaert.event_broker.error.BrokerException;
+import fr.volkaert.event_broker.model.EventToSubscriber;
 import fr.volkaert.event_broker.model.InflightEvent;
 import fr.volkaert.event_broker.subscription_adapter.config.BrokerConfig;
-import fr.volkaert.event_broker.subscription_adapter.model.EventToSubscriber;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.slf4j.Logger;

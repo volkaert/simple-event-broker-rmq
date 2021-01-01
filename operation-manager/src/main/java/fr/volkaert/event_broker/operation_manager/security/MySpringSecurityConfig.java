@@ -28,10 +28,9 @@ public class MySpringSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
                 .antMatchers("/actuator/**").permitAll()
-                .anyRequest().permitAll();
-                //.anyRequest().authenticated()
-                //.and().httpBasic()
-                //.authenticationEntryPoint(authEntryPoint);
+                .anyRequest().authenticated()
+                .and().httpBasic()
+                .authenticationEntryPoint(authEntryPoint);
         //http.authorizeRequests().antMatchers("/**").permitAll().anyRequest().authenticated().and().csrf().disable();
     }
 

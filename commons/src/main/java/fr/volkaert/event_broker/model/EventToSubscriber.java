@@ -1,6 +1,5 @@
-package fr.volkaert.event_broker.subscription_adapter.model;
+package fr.volkaert.event_broker.model;
 
-import fr.volkaert.event_broker.model.InflightEvent;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
