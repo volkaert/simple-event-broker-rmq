@@ -10,15 +10,15 @@
         <module>subscription-manager</module>
         <module>eureka-service</module>
         <module>publication-gateway</module>
-        <module>publication-adapter</module>
-        <module>subscription-adapter</module>
         <module>test-subscriber</module>
         <module>test-subscriber-oauth2</module>
         <module>probe</module>
         <module>test-server</module>
-        <module>catalog-adapter</module>
         <module>operation-manager</module>
         <module>operation-adapter-ri</module>
+        <module>catalog-adapter-ri</module>
+        <module>publication-adapter-ri</module>
+        <module>subscription-adapter-ri</module>
     </modules>
 
     <parent>
