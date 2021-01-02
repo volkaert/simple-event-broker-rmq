@@ -24,7 +24,7 @@ public class RestConfig {
 
     @Bean
     @Qualifier("RestTemplateForSubscriptionManager")
-    @LoadBalanced
+    //@LoadBalanced
     public RestTemplate restTemplateForSubscriptionManager(RestTemplateBuilder builder) {
         LOGGER.info("Timeouts for Subscription Manager: connect={}, read={}",
                 config.getConnectTimeoutInSecondsForSubscriptionManager(), config.getReadTimeoutInSecondsForSubscriptionManager());

@@ -1,5 +1,5 @@
 server:
-  port : 8081
+  port : 8080
 spring:
   application:
     name: simple-event-broker-rmq-publication-gateway
@@ -10,7 +10,7 @@ spring:
         response-timeout: 10s
       routes:
         - id: publication-adapter
-          uri: lb://PublicationAdapter
+          uri: http://localhost:8081
           predicates:
           - Path=/events
           filters:

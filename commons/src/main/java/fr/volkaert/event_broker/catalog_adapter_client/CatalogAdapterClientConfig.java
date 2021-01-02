@@ -19,7 +19,7 @@ public class CatalogAdapterClientConfig {
 
     @Bean
     @Qualifier("RestTemplateForCatalogAdapter")
-    @LoadBalanced
+    //@LoadBalanced
     public RestTemplate restTemplateForCatalogAdapter(RestTemplateBuilder builder) {
         return builder
                 .basicAuthentication(authClientIdForCatalogAdapter, authClientSecretForCatalogAdapter)

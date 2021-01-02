@@ -24,7 +24,7 @@ public class RestConfig {
 
     @Bean
     @Qualifier("RestTemplateForPublicationManager")
-    @LoadBalanced
+    //@LoadBalanced
     public RestTemplate restTemplateForPublicationManager(RestTemplateBuilder builder) {
         LOGGER.info("Timeouts for Publication Manager: connect={}, read={}",
                 config.getConnectTimeoutInSecondsForPublicationManager(), config.getReadTimeoutInSecondsForPublicationManager());

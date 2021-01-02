@@ -5,19 +5,18 @@ This version uses SpringBoot and RabbitMQ.
 
 ## The various modules/components
 - RabbitMQ. In dev mode, it uses port 5672 (for publish & subscribe) and port 15672 (for the RabbitMQ console).
-- Eureka Service Discovery. It uses port 8761 (default port for Eureka service).
-- Publication Gateway. In dev mode, it uses port 8081.
-- Publication Adapter. Port dynamically defined by Eureka. Name in Eureka: PublicationAdapter.
-  Publication Manager. Port dynamically defined by Eureka. Name in Eureka: PublicationManager.
-- Subscription Manager. Port dynamically defined by Eureka. Name in Eureka: SubscriptionManager.
-- Subscription Gateway (optional). In dev mode, it uses port 8085.
-- Subscription Adapter. Port dynamically defined by Eureka. Name in Eureka: PublicationAdapter.
-- Catalog. Port dynamically defined by Eureka. Name in Eureka: Catalog.
-- Catalog Adapter. Port dynamically defined by Eureka. Name in Eureka: CatalogAdapter.
-- Test/Fake Subscriber. In dev mode, it uses port 8099.
-- Probe. In dev mode, it uses port 8100.
-- OperationManager. Port dynamically defined by Eureka. Name in Eureka: OperationManager.
-- OperationAdapter. Port dynamically defined by Eureka. Name in Eureka: OperationAdapter.
+- Eureka Service Discovery. Deactivated for the moment. It uses port 8761 (default port for Eureka service).
+- Publication Gateway
+- Publication Adapter
+  Publication Manager
+- Subscription Manager
+- Subscription Adapter
+- Catalog
+- Catalog Adapter
+- Test/Fake Subscriber
+- Probe
+- OperationManager
+- OperationAdapter
 
 A `Manager` (`PublicationManager` and `SubscriptionManager`) contains the logic of publication/subscription, the management
 of acknowledgment of message/event (either positive or negative acknowledgment), the interaction with the underlying 
@@ -38,9 +37,27 @@ Catalog to operate.
 The `Publication Gateway` is the entry point to publish an event. It is based on a `Spring Cloud Gateway`. It offers 
 automatic retry feature to ensure no interruption service even in the case of the release of a new version of 
 a `PublicationAdapter`.
- 
+
+
+## Ports
+
+Ports used by the various components:
+- `8080`: port for the `PublicationGateway`
+- `8081`: port for the `PublicationAdapterRI`
+- `8082`: port for the `PublicationManager`
+- `8083`: port for the `SubscriptionManager`
+- `8084`: port for the `SubscriptionAdapterRI`
+- `8085`: port for the `CatalogAdapterRI`
+- `8086`: port for the `Catalog`
+- `8087`: port for the `OperationAdapterRI`
+- `8088`: port for the `OperationManager`
+- `8089`: port for the `Probe`
+- `8090`: port for the `TestServer`
+- `8099`: port for the `TestSubscriber` and `TestSubscriberOauth2`
+
 
 ## Event flow
+
 1. Event Publisher 
 2. Publication Gateway 
 3. Publication Adapter 
@@ -202,7 +219,7 @@ cd catalog
 
 ### Run the Catalog Adapter
 ```
-cd catalog-adapter
+cd catalog-adapter-ri
 ../mvnw clean spring-boot:run
 ```
 >You should start only one instance of the Catalog Adapter (you could start many instances, but 1 instance is sufficient)
@@ -244,7 +261,7 @@ replace `123456` with your actual organization id in Okta).
 Once the `set-credentials.sh`file contains the right credentials and the `application.properties` has been updated, 
 then run the Subscription Adapter:
 ```
-cd subscription-adapter
+cd subscription-adapter-ri
 source set-credentials.sh
 ../mvnw clean spring-boot:run
 ```
@@ -255,7 +272,7 @@ In that case, there is no need for the Subscription Adapter to get OAuth2 Access
 
 So you can simply run the Subscription Adapter (without `set-credentials.sh`file):
 ```
-cd subscription-adapter
+cd subscription-adapter-ri
 ../mvnw clean spring-boot:run
 ```
 
@@ -268,7 +285,7 @@ cd subscription-adapter
 >SubscriptionManager instance within the cluster.
 >Cluster index must  be ***UNIQUE*** within the cluster and must follow the sequence 0, 1... < Cluster size.
 >The SubscriptionManager instance in charge of the management of an event is the instance that meets the
->criteria `broker.cluster-index == (sum-of-the-ascii-codes-of-the-chars-of-event-type-code % broker.cluster-size)`.
+>criteria `broker.cluster-index == eventTypeCode.hashCode() % broker.cluster-size`.
 >For a given event type, only one instance of SubscriptionManager will manage the events.
 
 >**Warning**: This special configuration when multiple instances ofSubscription Manager are used is mandatory to 
@@ -302,7 +319,7 @@ cd publication-manager
 
 ### Run the Publication Adapter
 ```
-cd publication-adapter
+cd publication-adapter-ri
 ../mvnw clean spring-boot:run
 ```
 >You can start multiple instances of the Publication Adapter
@@ -454,25 +471,25 @@ The `TestServer` module contains the following tests:
 ### Examples
 Examples (with the `nominal` test):
 ```
-curl http://localhost:8100/tests/nominal/pub/run
-curl "http://localhost:8100/tests/nominal/pub/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&pauseForWebhook=1000&sync=true"    
-curl http://localhost:8100/tests/nominal/pub/stop
-curl "http://localhost:8100/tests/nominal/pub/stop?testId=123456789"
-curl http://localhost:8100/tests/nominal/pub/slowdown
-curl "http://localhost:8100/tests/nominal/pub/slowdown?testId=123456789&pause=10000"
-curl http://localhost:8100/tests/nominal/sub/accept
-curl "http://localhost:8100/tests/nominal/sub/accept?testId=123456789&status=201"
-curl http://localhost:8100/tests/nominal/sub/reject
-curl "http://localhost:8100/tests/nominal/sub/reject?testId=123456789&status=500"
-curl http://localhost:8100/tests/nominal/sub/slowdown
-curl "http://localhost:8100/tests/nominal/sub/slowdown?testId=123456789&pause=10000"
+curl http://localhost:8090/tests/nominal/pub/run
+curl "http://localhost:8090/tests/nominal/pub/run?publicationCode=TestPub&timeToLiveInSeconds=60&channel=mychannel&n=100&pause=1000&pauseForWebhook=1000&sync=true"    
+curl http://localhost:8090/tests/nominal/pub/stop
+curl "http://localhost:8090/tests/nominal/pub/stop?testId=123456789"
+curl http://localhost:8090/tests/nominal/pub/slowdown
+curl "http://localhost:8090/tests/nominal/pub/slowdown?testId=123456789&pause=10000"
+curl http://localhost:8090/tests/nominal/sub/accept
+curl "http://localhost:8090/tests/nominal/sub/accept?testId=123456789&status=201"
+curl http://localhost:8090/tests/nominal/sub/reject
+curl "http://localhost:8090/tests/nominal/sub/reject?testId=123456789&status=500"
+curl http://localhost:8090/tests/nominal/sub/slowdown
+curl "http://localhost:8090/tests/nominal/sub/slowdown?testId=123456789&pause=10000"
 ```
 
 ```
-curl "http://localhost:8100/tests/nominal/pub/run?n=10&pause=1000&timeToLiveInSeconds=30"
-curl http://localhost:8100/tests/nominal/sub/reject
-curl http://localhost:8100/tests/nominal/sub/accept
-curl http://localhost:8100/tests/nominal/pub/stop
+curl "http://localhost:8090/tests/nominal/pub/run?n=10&pause=1000&timeToLiveInSeconds=30"
+curl http://localhost:8090/tests/nominal/sub/reject
+curl http://localhost:8090/tests/nominal/sub/accept
+curl http://localhost:8090/tests/nominal/pub/stop
 ```
 
 
@@ -481,9 +498,9 @@ curl http://localhost:8100/tests/nominal/pub/stop
 The `TestServer` module records the results of the tests (useful to compare performance results before and after an 
 optimization or to detect performance degradation over time).
 
-To view those test records, go to `http://localhost:8100/tests/recordings` (the last test result is displayed at the top of the list).
+To view those test records, go to `http://localhost:8090/tests/recordings` (the last test result is displayed at the top of the list).
 
-To view records for *failed* tests only, go to `http://localhost:8100/tests/recordings?status=failed`
+To view records for *failed* tests only, go to `http://localhost:8090/tests/recordings?status=failed`
 
 A Test Record contains the following attributes:
 - `String testId`
@@ -540,19 +557,19 @@ The `OperationManager` module accepts the following commands:
 ### Examples
 Examples (with the `nominal` test):
 ```
-curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/next
-curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events/next
-curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/events
-curl http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
-curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
-curl --request DELETE http://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events
+curl http://localhost:8088/subscriptions/TestServer-Nominal-SUB/events/next
+curl --request DELETE http://localhost:8088/subscriptions/TestServer-Nominal-SUB/events/next
+curl --request DELETE http://localhost:8088/subscriptions/TestServer-Nominal-SUB/events
+curl http://localhost:8088/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
+curl --request DELETE 8088://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events/next
+curl --request DELETE 8088://localhost:43067/subscriptions/TestServer-Nominal-SUB/dead-letter-queue/events
 ```
 
 ```
-curl http://localhost:34379/subscriptions/TestServer-Nominal-SUB/rabbitmq/queue/info
-curl http://localhost:34379/rabbitmq/overview
-curl --request POST http://localhost:34379/event-processing/activate
-curl --request POST http://localhost:34379/event-processing/deactivate
+curl http://localhost:8088/subscriptions/TestServer-Nominal-SUB/rabbitmq/queue/info
+curl http://localhost:8088/rabbitmq/overview
+curl --request POST http://localhost:8088/event-processing/activate
+curl --request POST http://localhost:8088/event-processing/deactivate
 ```
 
 

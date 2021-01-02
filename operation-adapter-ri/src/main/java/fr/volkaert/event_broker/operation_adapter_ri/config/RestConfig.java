@@ -25,7 +25,7 @@ public class RestConfig {
 
     @Bean
     @Qualifier("RestTemplateForOperationManager")
-    @LoadBalanced
+    //@LoadBalanced
     public RestTemplate restTemplateForOperationManager(RestTemplateBuilder builder) {
         LOGGER.info("Timeouts for Operation Manager: connect={}, read={}",
                 config.getConnectTimeoutInSecondsForOperationManager(), config.getReadTimeoutInSecondsForOperationManager());

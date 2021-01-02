@@ -22,7 +22,7 @@ public class RestConfig {
 
     @Bean
     @Qualifier("RestTemplateForCatalog")
-    @LoadBalanced
+    //@LoadBalanced
     public RestTemplate restTemplateForCatalog(RestTemplateBuilder builder) {
         RestTemplate restTemplate = builder
                 .basicAuthentication(authClientIdForCatalog, authClientSecretForCatalog)

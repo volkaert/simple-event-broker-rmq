@@ -25,7 +25,7 @@ public class RestConfig {
 
     @Bean
     @Qualifier("RestTemplateForSubscriptionAdapter")
-    @LoadBalanced
+    //@LoadBalanced
     public RestTemplate restTemplateForSubscriptionAdapter(RestTemplateBuilder builder) {
         LOGGER.info("Timeouts for Subscription Adapter: connect={}, read={}",
                 config.getConnectTimeoutInSecondsForSubscriptionAdapter(), config.getReadTimeoutInSecondsForSubscriptionAdapter());
