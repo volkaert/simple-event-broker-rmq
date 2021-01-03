@@ -1,4 +1,4 @@
-package fr.volkaert.event_broker.model;
+package fr.volkaert.event_broker.adapters.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

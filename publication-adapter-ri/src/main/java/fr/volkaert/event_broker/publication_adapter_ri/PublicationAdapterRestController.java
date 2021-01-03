@@ -1,9 +1,9 @@
 package fr.volkaert.event_broker.publication_adapter_ri;
 
+import fr.volkaert.event_broker.adapters.model.EventFromPublisher;
+import fr.volkaert.event_broker.adapters.model.EventToPublisher;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
-import fr.volkaert.event_broker.model.EventFromPublisher;
-import fr.volkaert.event_broker.model.EventToPublisher;
 import fr.volkaert.event_broker.publication_adapter_ri.config.BrokerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

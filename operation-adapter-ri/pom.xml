@@ -18,6 +18,12 @@
             <version>${broker.commons.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>fr.volkaert.simple-event-broker-rmq</groupId>
+            <artifactId>adapters-commons</artifactId>
+            <version>${broker.commons.version}</version>
+        </dependency>
+
         <!-- https://github.com/rabbitmq/hop -->
         <dependency>
             <groupId>com.rabbitmq</groupId>

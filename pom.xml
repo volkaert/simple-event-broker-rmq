@@ -19,6 +19,7 @@
         <module>catalog-adapter-ri</module>
         <module>publication-adapter-ri</module>
         <module>subscription-adapter-ri</module>
+        <module>adapters-commons</module>
     </modules>
 
     <parent>

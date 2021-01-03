@@ -2,8 +2,8 @@ package fr.volkaert.event_broker.operation_adapter_ri;
 
 import com.rabbitmq.http.client.domain.OverviewResponse;
 import com.rabbitmq.http.client.domain.QueueInfo;
+import fr.volkaert.event_broker.adapters.model.EventToSubscriber;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
-import fr.volkaert.event_broker.model.EventToSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

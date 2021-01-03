@@ -17,6 +17,12 @@
             <artifactId>commons</artifactId>
             <version>${broker.commons.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>fr.volkaert.simple-event-broker-rmq</groupId>
+            <artifactId>adapters-commons</artifactId>
+            <version>${broker.commons.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
