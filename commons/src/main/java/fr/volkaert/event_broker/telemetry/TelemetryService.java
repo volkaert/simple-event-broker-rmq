@@ -132,6 +132,28 @@ public class TelemetryService {
         return msg;
     }
 
+    public synchronized String eventPublicationRejectedDueToInactiveEventType(InflightEvent event) {
+        String msg = "";
+        try {
+            String eventTypeCode = event.getEventTypeCode();
+            msg = String.format("Inactive event type '%s'. Event is %s.", eventTypeCode, event.toShortLog());
+            LOGGER.warn(msg); // WARNING and not ERROR !!
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording log for eventPublicationRejectedDueToInactiveEventType", ex);
+        }
+        try {
+            String eventTypeCode = event.getEventTypeCode();
+            Counter counter1 = meterRegistry.counter("event_publications_rejected_total");
+            counter1.increment();
+            Counter counter2 = meterRegistry.counter("event_publications_rejected_due_to_inactive_event_type_total",
+                    Tags.of("event_type_code", eventTypeCode));
+            counter2.increment();
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToInactiveEventType", ex);
+        }
+        return msg;
+    }
+
     public synchronized String eventPublicationAttempted(InflightEvent event) {
         String msg = "";
         try {

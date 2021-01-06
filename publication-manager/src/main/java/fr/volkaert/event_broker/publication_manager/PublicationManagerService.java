@@ -107,6 +107,11 @@ public class PublicationManagerService {
             throw new BrokerException(HttpStatus.INTERNAL_SERVER_ERROR, msg);   // It's an internal error, not a client error / bad request (the client does not provide the event type code) !
         }
 
+        if (! eventType.isActive()) {
+            String msg = telemetryService.eventPublicationRejectedDueToInactiveEventType(inflightEvent);
+            throw new BrokerException(HttpStatus.BAD_REQUEST, msg);
+        }
+
         return true; // true means the caller should continue its code flow
     }
 
