@@ -3,7 +3,7 @@ package fr.volkaert.event_broker.subscription_adapter_ri;
 import fr.volkaert.event_broker.adapters.model.EventToSubscriber;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.InflightEvent;
-import fr.volkaert.event_broker.subscription_adapter_ri.config.BrokerConfig;
+import fr.volkaert.event_broker.subscription_adapter_ri.config.BrokerConfigForSubscriptionAdapter;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class SubscriptionAdapterService {
     RestTemplate restTemplateForOAuth2Issuer;
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForSubscriptionAdapter config;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionAdapterService.class);
 

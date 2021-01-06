@@ -1,6 +1,5 @@
 package fr.volkaert.event_broker.publication_manager.config;
 
-import fr.volkaert.event_broker.publication_manager.config.BrokerConfig;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -18,10 +17,10 @@ import org.springframework.messaging.handler.annotation.support.DefaultMessageHa
 import org.springframework.messaging.handler.annotation.support.MessageHandlerMethodFactory;
 
 @Configuration
-public class RabbitConfig implements RabbitListenerConfigurer {
+public class RabbitConfigForPublicationManager implements RabbitListenerConfigurer {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForPublicationManager config;
 
     @Override
     public void configureRabbitListeners(RabbitListenerEndpointRegistrar registrar) {

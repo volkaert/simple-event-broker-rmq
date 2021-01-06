@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.operation_manager.availability;
 
-import fr.volkaert.event_broker.operation_manager.config.BrokerConfig;
+import fr.volkaert.event_broker.operation_manager.config.BrokerConfigForOperationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class OperationManagerReadinessHealthIndicator implements CompositeHealthContributor {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForOperationManager config;
 
     @Autowired
     @Qualifier("RestTemplateForCatalogAdapter")

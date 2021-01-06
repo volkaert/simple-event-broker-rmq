@@ -3,7 +3,7 @@ package fr.volkaert.event_broker.publication_manager;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
 import fr.volkaert.event_broker.model.InflightEvent;
-import fr.volkaert.event_broker.publication_manager.config.BrokerConfig;
+import fr.volkaert.event_broker.publication_manager.config.BrokerConfigForPublicationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicationManagerRestController {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForPublicationManager config;
 
     @Autowired
     PublicationManagerService publicationManagerService;

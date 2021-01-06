@@ -8,7 +8,7 @@ import com.rabbitmq.http.client.ClientParameters;
 import com.rabbitmq.http.client.domain.OverviewResponse;
 import com.rabbitmq.http.client.domain.QueueInfo;
 import fr.volkaert.event_broker.model.InflightEvent;
-import fr.volkaert.event_broker.operation_manager.config.BrokerConfig;
+import fr.volkaert.event_broker.operation_manager.config.BrokerConfigForOperationManager;
 import fr.volkaert.event_broker.util.RabbitMQNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import java.util.Iterator;
 public class OperationManagerService {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForOperationManager config;
 
     @Autowired
     ConnectionFactory rabbitMQConnectionFactory;

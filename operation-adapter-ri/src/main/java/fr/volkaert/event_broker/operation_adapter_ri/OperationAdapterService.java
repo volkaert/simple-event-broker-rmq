@@ -4,7 +4,7 @@ import com.rabbitmq.http.client.domain.OverviewResponse;
 import com.rabbitmq.http.client.domain.QueueInfo;
 import fr.volkaert.event_broker.adapters.model.EventToSubscriber;
 import fr.volkaert.event_broker.model.InflightEvent;
-import fr.volkaert.event_broker.operation_adapter_ri.config.BrokerConfig;
+import fr.volkaert.event_broker.operation_adapter_ri.config.BrokerConfigForOperationAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 public class OperationAdapterService {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForOperationAdapter config;
 
     @Autowired
     @Qualifier("RestTemplateForOperationManager")

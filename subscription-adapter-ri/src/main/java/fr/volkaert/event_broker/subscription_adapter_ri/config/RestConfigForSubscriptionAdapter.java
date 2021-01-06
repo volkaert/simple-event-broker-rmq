@@ -14,12 +14,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @Configuration
-public class RestConfig {
+public class RestConfigForSubscriptionAdapter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RestConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestConfigForSubscriptionAdapter.class);
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForSubscriptionAdapter config;
 
     @Bean
     @Qualifier("RestTemplateForWebhooks")

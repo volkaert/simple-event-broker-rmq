@@ -1,7 +1,7 @@
-package fr.volkaert.event_broker.subscription_manager.config;
+package fr.volkaert.event_broker.operation_manager.config;
 
+import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -16,10 +16,10 @@ import org.springframework.messaging.handler.annotation.support.DefaultMessageHa
 import org.springframework.messaging.handler.annotation.support.MessageHandlerMethodFactory;
 
 @Configuration
-public class RabbitConfig implements RabbitListenerConfigurer {
+public class RabbitConfigForOperationManager implements RabbitListenerConfigurer {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForOperationManager config;
 
     @Override
     public void configureRabbitListeners(RabbitListenerEndpointRegistrar registrar) {
@@ -48,7 +48,7 @@ public class RabbitConfig implements RabbitListenerConfigurer {
     }
 
     @Bean
-    public RabbitAdmin rabbitAdmin() {
+    public AmqpAdmin amqpAdmin() {
         return new RabbitAdmin(connectionFactory());
     }
 
@@ -62,16 +62,6 @@ public class RabbitConfig implements RabbitListenerConfigurer {
     @Bean
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter()  {
         return new Jackson2JsonMessageConverter();
-    }
-
-    @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory() {
-        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        factory.setMessageConverter(jackson2JsonMessageConverter());
-        factory.setConnectionFactory(connectionFactory());
-        factory.setConcurrentConsumers(1);
-        factory.setMaxConcurrentConsumers(1);
-        return factory;
     }
 }
 

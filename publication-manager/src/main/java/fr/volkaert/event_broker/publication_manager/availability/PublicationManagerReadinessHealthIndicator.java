@@ -1,6 +1,6 @@
 package fr.volkaert.event_broker.publication_manager.availability;
 
-import fr.volkaert.event_broker.publication_manager.config.BrokerConfig;
+import fr.volkaert.event_broker.publication_manager.config.BrokerConfigForPublicationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class PublicationManagerReadinessHealthIndicator implements CompositeHealthContributor {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForPublicationManager config;
 
     @Autowired
     @Qualifier("RestTemplateForCatalogAdapter")

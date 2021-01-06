@@ -4,7 +4,7 @@ import fr.volkaert.event_broker.adapters.model.EventFromPublisher;
 import fr.volkaert.event_broker.adapters.model.EventToPublisher;
 import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.error.BrokerExceptionResponse;
-import fr.volkaert.event_broker.publication_adapter_ri.config.BrokerConfig;
+import fr.volkaert.event_broker.publication_adapter_ri.config.BrokerConfigForPublicationAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicationAdapterRestController {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForPublicationAdapter config;
 
     @Autowired
     PublicationAdapterService publicationAdapterService;

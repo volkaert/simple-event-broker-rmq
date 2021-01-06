@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "broker")
 @Data
-public class BrokerConfig {
+public class BrokerConfigForPublicationAdapter {
 
     private String componentTypeName;   // Useful for metrics (to group them by component type)
     private String componentInstanceId; // Useful for metrics (to distinguish instances of the same component type)

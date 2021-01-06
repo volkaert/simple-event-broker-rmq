@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.StandardCharsets;
 
 @Configuration
-public class RestConfig {
+public class RestConfigForCatalogAdapter {
 
     @Value("${broker.auth-client-id-for-catalog}")
     String authClientIdForCatalog;

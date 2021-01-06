@@ -6,7 +6,7 @@ import fr.volkaert.event_broker.error.BrokerException;
 import fr.volkaert.event_broker.model.EventType;
 import fr.volkaert.event_broker.model.InflightEvent;
 import fr.volkaert.event_broker.model.Subscription;
-import fr.volkaert.event_broker.subscription_manager.config.BrokerConfig;
+import fr.volkaert.event_broker.subscription_manager.config.BrokerConfigForSubscriptionManager;
 import fr.volkaert.event_broker.telemetry.TelemetryService;
 import fr.volkaert.event_broker.util.RabbitMQNames;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SubscriptionManagerService {
 
     @Autowired
-    BrokerConfig config;
+    BrokerConfigForSubscriptionManager config;
 
     @Autowired
     CatalogAdapterClient catalog;
