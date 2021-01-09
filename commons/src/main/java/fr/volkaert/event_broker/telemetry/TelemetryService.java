@@ -7,6 +7,7 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,10 +30,43 @@ public class TelemetryService {
     //private final Map<String, AtomicLong> pendingDeliveriesGauges = new ConcurrentHashMap<>();
 
 
+    private void putInfoInMDC(InflightEvent event, String msgCode) {
+        MDC.remove("eventTypeCode");
+        MDC.remove("publicationCode");
+        MDC.remove("subscriptionCode");
+        MDC.remove("messageCode");
+
+        MDC.put("messageCode", msgCode);
+        if (event != null) {
+            String eventTypeCode = event.getEventTypeCode();
+            if (eventTypeCode != null) {
+                MDC.put("eventTypeCode", eventTypeCode);
+            }
+            String publicationCode = event.getPublicationCode();
+            if (publicationCode != null) {
+                MDC.put("publicationCode", publicationCode);
+            }
+            String subscriptionCode = event.getSubscriptionCode();
+            if (subscriptionCode != null) {
+                MDC.put("subscriptionCode", subscriptionCode);
+            }
+        }
+    }
+
+    private void removeInfoInMDC() {
+        MDC.remove("eventTypeCode");
+        MDC.remove("publicationCode");
+        MDC.remove("subscriptionCode");
+        MDC.remove("messageCode");
+    }
+
+
+
     // PUBLICATION /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     public synchronized String eventPublicationRequested(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REQUESTED");
         String msg = "";
         try {
             msg = String.format("Event publication requested. Event is %s.", event);
@@ -40,16 +74,19 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording log for eventPublicationRequested", ex);
         }
+
         try {
             Counter counter1 = meterRegistry.counter("event_publications_requested_total");
             counter1.increment();
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventPublicationRequested", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationRejectedDueToMissingPublicationCode(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REJECTED_MISSING_PUBLICATION_CODE");
         String msg = "";
         try {
             msg = String.format("Event publication rejected due to missing publication code. Event is %s.", event.toShortLog());
@@ -65,10 +102,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToMissingPublicationCode", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationRejectedDueToInvalidPublicationCode(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_PUBLICATION_CODE");
         String msg = "";
         try {
             String publicationCode = event.getPublicationCode();
@@ -86,10 +125,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToInvalidPublicationCode", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationRejectedDueToInactivePublication(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REJECTED_INACTIVE_PUBLICATION");
         String msg = "";
         try {
             String publicationCode = event.getPublicationCode();
@@ -108,10 +149,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToInactivePublication", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationRejectedDueToInvalidEventTypeCode(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_EVENT_TYPE_CODE");
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -129,10 +172,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToInvalidEventTypeCode", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationRejectedDueToInactiveEventType(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REJECTED_INACTIVE_EVENT_TYPE");
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -151,10 +196,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToInactiveEventType", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationAttempted(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_ATTEMPTED");
         String msg = "";
         try {
             msg = String.format("Event publication attempted. Event is %s.", event);
@@ -179,10 +226,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventPublicationAttempted", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationSucceeded(InflightEvent event, Instant publicationStart) {
+        putInfoInMDC(event, "PUBLICATION_SUCCEEDED");
         String msg = "";
         try {
             msg = String.format("Event publication succeeded. Event is %s.", event.toShortLog());
@@ -212,10 +261,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventPublicationSucceeded", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationFailed(InflightEvent event, Exception exception, Instant publicationStart) {
+        putInfoInMDC(event, "PUBLICATION_FAILED");
         String msg = "";
         try {
             msg = String.format("Event publication failed. Exception is `%s`. Event is %s.",
@@ -246,10 +297,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventPublicationFailed", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventPublicationFailedForMirroring(InflightEvent event, Exception exception) {
+        putInfoInMDC(event, "PUBLICATION_FAILED_MIRRORING");
         String msg = "";
         try {
             msg = String.format("Event publication failed for mirroring. Exception is `%s`. Event is %s.",
@@ -268,6 +321,7 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventPublicationFailedForMirroring", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
@@ -276,6 +330,7 @@ public class TelemetryService {
 
 
     public synchronized String eventDeliveryRequested(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_REQUESTED");
         String msg = "";
         try {
             msg = String.format("Event delivery requested. Event is %s.", event);
@@ -293,10 +348,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryRequested", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToExpiredEvent(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_EXPIRED_EVENT");
         String msg = "";
         try {
             msg = String.format("Event delivery aborted due to expired event. Event is %s.", event.toShortLog());
@@ -317,10 +374,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToExpiredEvent", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToInactiveEventProcessing(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_INACTIVE_EVENT_PROCESSING");
         String msg = "";
         try {
             msg = String.format("Event delivery aborted due to inactive event processing. Event is %s.", event.toShortLog());
@@ -341,10 +400,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToInactiveEventProcessing", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToInvalidSubscriptionCode(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_INVALID_SUBSCRIPTION_CODE");
         String msg = "";
         try {
             String subscriptionCode = event.getSubscriptionCode();
@@ -366,10 +427,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToInvalidSubscriptionCode", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToInactiveSubscription(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_INACTIVE_SUBSCRIPTION");
         String msg = "";
         try {
             String subscriptionCode = event.getSubscriptionCode();
@@ -391,10 +454,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToInactiveSubscription", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToInvalidEventTypeCode(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_INVALID_EVENT_TYPE_CODE");
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -416,10 +481,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToInvalidEventTypeCode", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToInactiveEventType(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_INACTIVE_EVENT_TYPE");
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -441,10 +508,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToInactiveEventType", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAbortedDueToNotMatchingChannel(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ABORTED_NOT_MATCHING_CHANNEL");
         String msg = "";
         try {
             String channel = event.getChannel();
@@ -466,10 +535,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metrics for eventDeliveryAbortedDueToNotMatchingChannel", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryAttempted(InflightEvent event) {
+        putInfoInMDC(event, "DELIVERY_ATTEMPTED");
         String msg = "";
         try {
             msg = String.format("Event delivery attempted. Event is %s.", event);
@@ -477,7 +548,6 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording log for eventDeliveryAttempted", ex);
         }
-
         try {
             String subscriptionCode = event.getSubscriptionCode();
             String eventTypeCode = event.getEventTypeCode();
@@ -488,11 +558,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventDeliveryAttempted", ex);
         }
-
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliverySucceeded(InflightEvent event, Instant deliveryStart) {
+        putInfoInMDC(event, "DELIVERY_SUCCEEDED");
         String msg = "";
         try {
             msg = String.format("Event delivery succeeded. Event is %s.", event.toShortLog());
@@ -516,10 +587,12 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventDeliverySucceeded", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 
     public synchronized String eventDeliveryFailed(InflightEvent event, Exception exception, Instant deliveryStart) {
+        putInfoInMDC(event, "DELIVERY_FAILED");
         String msg = "";
         try {
             msg = String.format("Event delivery failed. Exception is `%s`. Event is %s.",
@@ -544,6 +617,7 @@ public class TelemetryService {
         } catch (Exception ex) {
             LOGGER.error("Error while recording metric for eventDeliveryFailed", ex);
         }
+        removeInfoInMDC();
         return msg;
     }
 }
