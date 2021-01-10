@@ -517,8 +517,102 @@ A Test Record contains the following attributes:
 >Planned enhancements: filters with `from` and `to` (time range)...
 
 
+### Logs
+
+For standard logs, use the Spring profile `stdlogs`.
+
+For JSON logs, use the Spring profile `jsonlogs`.
+
+> To set the Spring profile, either set the `spring.profiles.active` property in the `application.properties` config file or 
+> set the command line argument `-Dspring.profiles.active`.
+
+For JSON logs (in files), there is a rotation every day or if the size of the file exceeds 10MB.
+
+For JSON logs, the `logstash-logback-encoder` is used (https://github.com/logstash/logstash-logback-encoder).
+
+The `logstash-logback-encoder` generates the following JSON attributes for the log:
+- `@timestamp`: Time of the log event (yyyy-MM-dd'T'HH:mm:ss.SSSZZ)
+- `@version`: Logstash format version (e.g. 1)
+- `message`: Formatted log message of the event
+- `logger_name`: Name of the logger that logged the event
+- `thread_name`: Name of the thread that logged the event
+- `level`: String name of the level of the event
+- `level_value`: Integer value of the level of the event
+- `stack_trace`: (Only if a throwable was logged) The stacktrace of the throwable. Stackframes are separated by line endings.
+- `tags`: (Only if tags are found)
+
+Logs may contain the following information if relevant for the log:
+- `event_type_code`
+- `publication_code`
+- `subscription_code`
+- `message_code`
+- `duration_in_sec`
+- `duration_in_millis`
+
+The following `message_code` are used:
+- `PUBLICATION_REQUESTED`
+- `PUBLICATION_REJECTED_MISSING_PUBLICATION_CODE`
+- `PUBLICATION_REJECTED_INVALID_PUBLICATION_CODE`
+- `PUBLICATION_REJECTED_INACTIVE_PUBLICATION`
+- `PUBLICATION_REJECTED_INVALID_EVENT_TYPE_CODE`
+- `PUBLICATION_REJECTED_INACTIVE_EVENT_TYPE`
+- `PUBLICATION_ATTEMPTED`
+- `PUBLICATION_SUCCEEDED` (the `duration_in_millis` info is provided)
+- `PUBLICATION_FAILED` (the `duration_in_millis` info is provided)
+- `PUBLICATION_FAILED_MIRRORING`
+- `DELIVERY_REQUESTED`
+- `DELIVERY_ABORTED_EXPIRED_EVENT`
+- `DELIVERY_ABORTED_INACTIVE_EVENT_PROCESSING`
+- `DELIVERY_ABORTED_INVALID_SUBSCRIPTION_CODE`
+- `DELIVERY_ABORTED_INACTIVE_SUBSCRIPTION`
+- `DELIVERY_ABORTED_INVALID_EVENT_TYPE_CODE`
+- `DELIVERY_ABORTED_INACTIVE_EVENT_TYPE`
+- `DELIVERY_ABORTED_NOT_MATCHING_CHANNEL`
+- `DELIVERY_ATTEMPTED`
+- `DELIVERY_SUCCEEDED` (the `duration_in_millis` info is provided)
+- `DELIVERY_FAILED` (the `duration_in_millis` info is provided)
+  
+
+
 ### Metrics
 
+All metrics are produced using the Prometheus format and are exposed at the `/actuator/prometheus` endpoint.
+
+The following tags are present for all metrics:
+- `component_name` (as defined in th `application.properties` config file)
+- `component_instance_id` (as defined in th `application.properties` config file)
+- `host_name`
+
+The following metrics are produced:
+- Counter `event_publications_requested_total`
+- Counter `event_publications_rejected_total`
+- Counter `event_publications_rejected_due_to_missing_publication_code_total`
+- Counter `event_publications_rejected_due_to_invalid_publication_code_total`
+- Counter `event_publications_rejected_due_to_inactive_publication_total`
+- Counter `event_publications_rejected_due_to_invalid_event_type_code_total`
+- Counter `event_publications_rejected_due_to_inactive_event_type_total`
+- Counter `event_publications_attempted_total`
+- Counter `event_publications_succeeded_total`
+- Counter `event_publications_failed_total`
+- Counter `event_publications_failed_for_mirroring_total`
+- Gauge `pending_event_publications`
+- Timer `event_publication_duration`
+- Counter `event_deliveries_requested_total`
+- Counter `event_deliveries_aborted_total`
+- Counter `event_deliveries_aborted_due_to_expired_event_total`
+- Counter `event_deliveries_aborted_due_to_inactive_event_processing_total`
+- Counter `event_deliveries_aborted_due_to_invalid_subscription_code_total`
+- Counter `event_deliveries_aborted_due_to_inactive_subscription_total`
+- Counter `event_deliveries_aborted_due_to_invalid_event_type_code_total`
+- Counter `event_deliveries_aborted_due_to_inactive_event_type_total`
+- Counter `event_deliveries_aborted_due_to_not_matching_channel_total`
+- Counter `event_deliveries_attempted_total`
+- Counter `event_deliveries_succeeded_total`
+- Counter `event_deliveries_failed_total`
+- Timer `event_delivery_duration`
+
+
+#### Metrics for TestServer
 The `TestServer` module generates the following metrics (at the `/actuator/prometheus` endpoint):
 - `test_started_total`
 - `test_succeeded_total`
