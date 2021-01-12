@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @EnableScheduling
 public class CatalogAdapterClient {
 
-    @Value("${broker.catalog-adapter-url:}")
+    @Value("${broker.catalog-adapter-url:#{null}}")   // can be null for the Catalog and CatalogAdapter modules
     String catalogAdapterUrl;
 
     @Autowired
@@ -55,7 +56,7 @@ public class CatalogAdapterClient {
 
     @Scheduled(fixedDelay = 60000)
     public void refreshCaches() {
-        if (catalogAdapterUrl == null || catalogAdapterUrl.isEmpty()) return;
+        if (StringUtils.isEmpty(catalogAdapterUrl)) return; // can be null for the Catalog and CatalogAdapter modules
         LOGGER.info("Refreshing catalog caches");
         try {
             refreshEventTypesCache();

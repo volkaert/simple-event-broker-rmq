@@ -697,3 +697,152 @@ use an online BCrypt Hash Generator and Checker, such as https://www.devglan.com
 RabbitMQ console: http://localhost:15672/
 Default login and password are "guest".
 
+
+
+## Quick start in local
+
+
+### Download this repository
+
+`git clone` or download this repository as zip file.
+
+
+### RabbitMQ config
+
+You can start a RabbitMQ server locally using the `start-rabbitmq.sh` script file but it requires that Docker is installed on 
+the machine.
+
+If you already have a RabbitMQ server, then you will have to update the following properties file to set the URL and the 
+login/password to access RabbitMQ:
+- `publication-manager/src/main/resources/application-<env>.properties`
+- `subscription-manager/src/main/resources/application-<env>.properties`
+- `operation-manager/src/main/resources/application-<env>.properties`
+
+
+### Run the various components
+
+>If you want to set a profile according to your environment (for example `local` or `homol` or `prod`), 
+> use `../mvnw spring-boot:run -Dspring-boot.run.profiles=<profile>`
+> 
+>`local` is the default profile is no profile is provided.
+> 
+>
+> Examples:
+> 
+>`../mvnw spring-boot:run -Dspring-boot.run.profiles=local`
+>
+>`../mvnw spring-boot:run -Dspring-boot.run.profiles=homol`
+>
+>`../mvnw spring-boot:run -Dspring-boot.run.profiles=prod`
+
+>If you prefer to use the `java` command instead of the `mvnw` command, use
+> `java -jar -Dspring.profiles.active=<profile> XXX.jar`
+>
+> Examples:
+>
+>`java -jar -Dspring.profiles.active=local target/publication-manager-1.0-SNAPSHOT.jar`
+>
+>`java -jar -Dspring.profiles.active=homol target/publication-manager-1.0-SNAPSHOT.jar`
+>
+>`java -jar -Dspring.profiles.active=prod target/publication-manager-1.0-SNAPSHOT.jar`
+
+>If you do not want to provide the profile on the command line, you can set the env variable `SPRING_PROFILES_ACTIVE`.
+>
+> Examples:
+>
+> `export SPRING_PROFILES_ACTIVE=local`
+> 
+> `export SPRING_PROFILES_ACTIVE=homol`
+> 
+> `export SPRING_PROFILES_ACTIVE=prod`
+
+>By default, the `local` profile uses standard logs in the console, and the `homol` profile uses JSON logs both in the console
+> and in rolling files.
+>
+> If you want to have JSON logs with the `local` profile you can do: 
+> 
+>`../mvnw clean spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.arguments=--logging.config=classpath:logback-spring-homol.xml`
+>
+> or
+>
+> `java -jar -Dspring.profiles.active=local -Dlogging.config=classpath:logback-spring-homol.xml target/xxx-1.0-SNAPSHOT.jar`
+>
+> If you want to have standard logs in the console with the `homol` profile you can do:
+>
+>`../mvnw clean spring-boot:run -Dspring-boot.run.profiles=homol -Dspring-boot.run.arguments=--logging.config=classpath:logback-spring-local.xml`
+> 
+> or
+> 
+> `java -jar -Dspring.profiles.active=homol -Dlogging.config=classpath:logback-spring-local.xml target/xxx-1.0-SNAPSHOT.jar`
+
+
+Compile everything:
+```
+./mvnw clean install
+```
+
+Run the Catalog:
+```
+cd catalog
+../mvnw spring-boot:run
+```
+
+Run the Catalog Adapter (Reference Implementation):
+```
+cd catalog-adapter-ri
+../mvnw spring-boot:run
+```
+
+Run the Publication Manager:
+```
+cd publication-manager
+../mvnw spring-boot:run
+```
+
+Run the Publication Adapter (Reference Implementation):
+```
+cd publication-adapter-ri
+../mvnw spring-boot:run
+```
+
+Run the Subscription Adapter (Reference Implementation):
+```
+cd subscription-adapter-ri
+../mvnw spring-boot:run
+```
+
+Run the Subscription Manager:
+```
+cd subscription-manager
+../mvnw spring-boot:run
+```
+
+Run the Operation Manager:
+```
+cd operation-manager
+../mvnw spring-boot:run
+```
+
+Run the Operation Adapter (Reference Implementation):
+```
+cd operation-adapter-ri
+../mvnw spring-boot:run
+```
+
+Run the Probe:
+```
+cd probe
+../mvnw spring-boot:run
+```
+
+Run the Test Server:
+```
+cd test-server
+../mvnw spring-boot:run
+```
+
+
+### Check everything is ok
+```
+curl http://localhost:8090/tests/nominal/pub/run
+```
