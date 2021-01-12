@@ -76,7 +76,7 @@ public class CatalogAdapterClient {
         };
     }
 
-    @Bean
+    @Bean(name="CatalogCacheForCatalogAdapterClient")
     public CatalogCache createCatalogCache() {
         return new CatalogCache();
     }
