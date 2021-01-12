@@ -77,7 +77,7 @@ public class SubscriptionManagerService {
         createRabbitMQConsumers();
     }
 
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 60000)
     // *** NEVER LET AN EXCEPTION BE RAISED/THROWN BY THIS OPERATION !!! ***
     public void createRabbitMQConsumers() {
         try {

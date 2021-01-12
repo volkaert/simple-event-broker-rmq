@@ -9,9 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -22,47 +19,121 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Configuration
-@EnableCaching
 @EnableScheduling
 public class CatalogAdapterClient {
 
-    @Value("${broker.catalog-adapter-url}")
+    @Value("${broker.catalog-adapter-url:}")
     String catalogAdapterUrl;
 
     @Autowired
     @Qualifier("RestTemplateForCatalogAdapter")
     RestTemplate restTemplate;
 
-    @Autowired
-    CacheManager cacheManager;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(CatalogAdapterClient.class);
 
+    private final Object eventTypesLock = new Object();
+    private List<EventType> eventTypesList = new ArrayList<>();
+    private final Map<String, EventType> eventTypesMap = new ConcurrentHashMap<>();
+    private boolean eventTypesInitDone = false;
+
+    private final Object publicationsLock = new Object();
+    private List<Publication> publicationsList = new ArrayList<>();
+    private final Map<String, Publication> publicationsMap = new ConcurrentHashMap<>();
+    private boolean publicationsInitDone = false;
+
+    private final Object subscriptionsLock = new Object();
+    private List<Subscription> subscriptionsList = new ArrayList<>();
+    private final Map<String, Subscription> subscriptionsMap = new ConcurrentHashMap<>();
+    private boolean subscriptionsInitDone = false;
+
     @Scheduled(fixedDelay = 60000)
-    public void clearCaches() {
-        LOGGER.info("Clearing catalog caches");
-        cacheManager.getCache("event-types") .clear();
-        cacheManager.getCache("publications") .clear();
-        cacheManager.getCache("subscriptions") .clear();
+    public void refreshCaches() {
+        if (catalogAdapterUrl == null || catalogAdapterUrl.isEmpty()) return;
+        LOGGER.info("Refreshing catalog caches");
+        try {
+            refreshEventTypesCache();
+        } catch (Exception ex) {
+            LOGGER.error("Error while refreshing event types cache", ex);
+        }
+        try {
+            refreshPublicationsCache();
+        } catch (Exception ex) {
+            LOGGER.error("Error while refreshing publications cache", ex);
+        }
+        try {
+            refreshSubscriptionsCache();
+        } catch (Exception ex) {
+            LOGGER.error("Error while refreshing subscriptions cache", ex);
+        }
     }
 
-    @Cacheable(value = "event-types")
+    private void refreshEventTypesCache() {
+        synchronized (eventTypesLock) {
+            List<EventType> newEventTypes = getEventTypesWithoutCache();
+            eventTypesList = newEventTypes;
+            eventTypesMap.clear();  // clear must be after getEventTypesWithoutCache because if this operation throws an error we want to keep the current values in the cache
+            for (EventType eventType : newEventTypes) {
+                eventTypesMap.put(eventType.getCode(), eventType);
+            }
+            eventTypesInitDone = true;
+        }
+    }
+
+    private void refreshPublicationsCache() {
+        synchronized (publicationsLock) {
+            List<Publication> newPublications = getPublicationsWithoutCache();
+            publicationsList = newPublications;
+            publicationsMap.clear();  // clear must be after getPublicationsWithoutCache because if this operation throws an error we want to keep the current values in the cache
+            for (Publication publication : newPublications) {
+                publicationsMap.put(publication.getCode(), publication);
+            }
+            publicationsInitDone = true;
+        }
+    }
+
+    private void refreshSubscriptionsCache() {
+        synchronized (subscriptionsLock) {
+            List<Subscription> newSubscriptions = getSubscriptionsWithoutCache();
+            subscriptionsList = newSubscriptions;
+            subscriptionsMap.clear();  // clear must be after getSubscriptionsWithoutCache because if this operation throws an error we want to keep the current values in the cache
+            for (Subscription subscription : newSubscriptions) {
+                subscriptionsMap.put(subscription.getCode(), subscription);
+            }
+            subscriptionsInitDone = true;
+        }
+    }
+
     public List<EventType> getEventTypes() {
+        synchronized (eventTypesLock) {
+            if (!eventTypesInitDone) {
+                refreshEventTypesCache();
+            }
+        }
+        return eventTypesList;
+    }
+
+    private List<EventType> getEventTypesWithoutCache() {
         ResponseEntity<List<EventType>> responseEntity = restTemplate.exchange(catalogAdapterUrl + "/catalog/event-types", HttpMethod.GET, null,
-            new ParameterizedTypeReference<List<EventType>>() {});
+                new ParameterizedTypeReference<List<EventType>>() {});
         return responseEntity.getBody();
     }
 
-    @Cacheable(value = "event-types")
     public EventType getEventType(String code) {
-        ResponseEntity<EventType> responseEntity = restTemplate.getForEntity(catalogAdapterUrl + "/catalog/event-types/" + code, EventType.class);
-        return responseEntity.getBody();
+        synchronized (eventTypesLock) {
+            if (!eventTypesInitDone) {
+                refreshEventTypesCache();
+            }
+        }
+        return eventTypesMap.get(code);
     }
-    @Cacheable(value = "event-types")
+
     public EventType getEventTypeOrThrowException(String code) {
         EventType eventType = getEventType(code);
         if (eventType == null) {
@@ -73,20 +144,30 @@ public class CatalogAdapterClient {
         return eventType;
     }
 
-    @Cacheable(value = "publications")
     public List<Publication> getPublications() {
+        synchronized (publicationsLock) {
+            if (!publicationsInitDone) {
+                refreshPublicationsCache();
+            }
+        }
+        return publicationsList;
+    }
+
+    private List<Publication> getPublicationsWithoutCache() {
         ResponseEntity<List<Publication>> responseEntity = restTemplate.exchange(catalogAdapterUrl + "/catalog/publications", HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Publication>>() {});
         return responseEntity.getBody();
     }
 
-    @Cacheable(value = "publications")
     public Publication getPublication(String code) {
-        ResponseEntity<Publication> responseEntity = restTemplate.getForEntity(catalogAdapterUrl + "/catalog/publications/" + code, Publication.class);
-        return responseEntity.getBody();
+        synchronized (publicationsLock) {
+            if (!publicationsInitDone) {
+                refreshPublicationsCache();
+            }
+        }
+        return publicationsMap.get(code);
     }
 
-    @Cacheable(value = "publications")
     public Publication getPublicationOrThrowException(String code) {
         Publication publication = getPublication(code);
         if (publication == null) {
@@ -97,20 +178,30 @@ public class CatalogAdapterClient {
         return publication;
     }
 
-    @Cacheable(value = "subscriptions")
     public List<Subscription> getSubscriptions() {
+        synchronized (subscriptionsLock) {
+            if (!subscriptionsInitDone) {
+                refreshSubscriptionsCache();
+            }
+        }
+        return subscriptionsList;
+    }
+
+    private List<Subscription> getSubscriptionsWithoutCache() {
         ResponseEntity<List<Subscription>> responseEntity = restTemplate.exchange(catalogAdapterUrl + "/catalog/subscriptions", HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Subscription>>() {});
         return responseEntity.getBody();
     }
 
-    @Cacheable(value = "subscriptions")
     public Subscription getSubscription(String code) {
-        ResponseEntity<Subscription> responseEntity = restTemplate.getForEntity(catalogAdapterUrl + "/catalog/subscriptions/" + code, Subscription.class);
-        return responseEntity.getBody();
+        synchronized (subscriptionsLock) {
+            if (!subscriptionsInitDone) {
+                refreshSubscriptionsCache();
+            }
+        }
+        return subscriptionsMap.get(code);
     }
 
-    @Cacheable(value = "subscriptions")
     public Subscription getSubscriptionOrThrowException(String code) {
         Subscription subscription = getSubscription(code);
         if (subscription == null) {
