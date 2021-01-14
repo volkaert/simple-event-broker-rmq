@@ -1,20 +1,25 @@
 <configuration>
 
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <property resource="application.properties" />
+    <springProperty name="LOG_PATH" source="logging.file.path" />
+    <springProperty name="LOG_FILE" source="logging.file.name" />
 
     <appender name="JsonConsole" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
     <appender name="JsonRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
+        <file>${LOG_PATH}/${LOG_FILE}</file>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>%d{yyyy-MM-dd}.%i.${LOG_FILE}</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <totalSizeCap>10GB</totalSizeCap>
-            <maxHistory>30</maxHistory>
-            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy-MM-dd}.%i.${LOG_FILE}</fileNamePattern>
+            <maxFileSize>${logging.logback.rollingpolicy.max-file-size}</maxFileSize>
+            <totalSizeCap>${logging.logback.rollingpolicy.total-size-cap}</totalSizeCap>
+            <maxHistory>${logging.logback.rollingpolicy.max-history}</maxHistory>
+            <cleanHistoryOnStart>${logging.logback.rollingpolicy.clean-history-on-start}</cleanHistoryOnStart>
         </rollingPolicy>
     </appender>
 
