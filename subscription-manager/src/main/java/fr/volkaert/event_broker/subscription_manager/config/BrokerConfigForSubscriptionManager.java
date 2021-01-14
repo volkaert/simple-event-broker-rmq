@@ -38,10 +38,9 @@ public class BrokerConfigForSubscriptionManager {
     // SubscriptionManager instance within the cluster.
     // Cluster index must  be ***UNIQUE*** within the cluster and must follow the sequence 0, 1... < Cluster size.
     // The SubscriptionManager instance in charge of the management of an event is the instance that meets the
-    // criteria 'broker.cluster-index == (sum-of-the-ascii-codes-of-the-chars-of-event-type-code % broker.cluster-size)'.
-    // For a given event type, only one instance of SubscriptionManager will manage the events.
+    // criteria `broker.cluster-node-index == eventTypeCode.hashCode() % broker.cluster-size`.
     private int clusterSize;
-    private int clusterIndex;
+    private int clusterNodeIndex;
 
     private boolean eventProcessingActive;  //Should be true on the primary datacenter and false on the backup datacenter (to avoid duplicate deliveries)
 }

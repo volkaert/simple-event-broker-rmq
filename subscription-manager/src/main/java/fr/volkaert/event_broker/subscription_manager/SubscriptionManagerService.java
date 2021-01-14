@@ -488,8 +488,8 @@ public class SubscriptionManagerService {
     }
 
     private boolean shouldTheEventBeManagedByThisInstanceOfSubscriptionManager(String eventTypeCode) {
-        int indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent = eventTypeCode.hashCode() % config.getClusterSize();
-        return indexOfTheInstanceOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent == config.getClusterIndex();
+        int indexOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent = eventTypeCode.hashCode() % config.getClusterSize();
+        return indexOfTheInstanceOfSubscriptionManagerThatShouldManageThisEvent == config.getClusterNodeIndex();
     }
 
     public void activateEventProcessing() {

@@ -280,12 +280,12 @@ cd subscription-adapter-ri
 
 >You can start multiple instances of the Subscription Manager but if you start multiple instances, you must pay
 >attention to provide the right configuration on the start command line (to override the default properties 
->`broker.cluster-size` and `broker.cluster-index`).
+>`broker.cluster-size` and `broker.cluster-node-index`).
 >Cluster size is the number of SubscriptionManager instances and Cluster index is the index of this
 >SubscriptionManager instance within the cluster.
 >Cluster index must  be ***UNIQUE*** within the cluster and must follow the sequence 0, 1... < Cluster size.
 >The SubscriptionManager instance in charge of the management of an event is the instance that meets the
->criteria `broker.cluster-index == eventTypeCode.hashCode() % broker.cluster-size`.
+>criteria `broker.cluster-node-index == eventTypeCode.hashCode() % broker.cluster-size`.
 >For a given event type, only one instance of SubscriptionManager will manage the events.
 
 >**Warning**: This special configuration when multiple instances ofSubscription Manager are used is mandatory to 
@@ -302,12 +302,12 @@ cd subscription-manager
 Start the instance #1 with:
 ```
 cd subscription-manager
-../mvnw clean spring-boot:run -Dspring-boot.run.arguments="--broker.cluster-size=2 , --broker.cluster-index=0"
+../mvnw clean spring-boot:run -Dspring-boot.run.arguments="--broker.cluster-size=2 , --broker.cluster-node-index=0"
 ```
 Start the instance #2 with:
 ```
 cd subscription-manager
-../mvnw clean spring-boot:run -Dspring-boot.run.arguments="--broker.cluster-size=2 , --broker.cluster-index=1"
+../mvnw clean spring-boot:run -Dspring-boot.run.arguments="--broker.cluster-size=2 , --broker.cluster-node-index=1"
 ```
 
 ### Run the Publication Manager
