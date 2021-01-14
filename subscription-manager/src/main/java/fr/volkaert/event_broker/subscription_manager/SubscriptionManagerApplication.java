@@ -5,9 +5,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
 @EntityScan("fr.volkaert")  // Required because entities are not in the same project !
