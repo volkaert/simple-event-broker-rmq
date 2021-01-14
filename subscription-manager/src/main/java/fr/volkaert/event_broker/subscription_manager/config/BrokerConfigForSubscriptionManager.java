@@ -19,6 +19,7 @@ public class BrokerConfigForSubscriptionManager {
     private int rabbitMQPort;
     private String rabbitMQUsername;
     private String rabbitMQPassword;
+    private boolean rabbitMQSSLEnabled;
 
     private String subscriptionAdapterUrl;
     private String authClientIdForSubscriptionAdapter;

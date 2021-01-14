@@ -13,13 +13,14 @@ public class BrokerConfigForPublicationManager {
     private int rabbitMQPort;
     private String rabbitMQUsername;
     private String rabbitMQPassword;
-
+    private boolean rabbitMQSSLEnabled;
     private boolean mirroringActive;
 
     private String rabbitMQHostForMirroring;
     private int rabbitMQPortForMirroring;
     private String rabbitMQUsernameForMirroring;
     private String rabbitMQPasswordForMirroring;
+    private boolean rabbitMQSSLEnabledForMirroring;
 
     private String catalogAdapterUrl;
 

@@ -712,7 +712,7 @@ Default login and password are "guest".
 You can start a RabbitMQ server locally using the `start-rabbitmq.sh` script file but it requires that Docker is installed on 
 the machine.
 
-If you already have a RabbitMQ server, then you will have to update the following properties file to set the URL and the 
+If you already have a RabbitMQ server, then you will have to update the following properties files to set the URL and the 
 login/password to access RabbitMQ:
 - `publication-manager/src/main/resources/application-<env>.properties`
 - `subscription-manager/src/main/resources/application-<env>.properties`
@@ -724,7 +724,7 @@ login/password to access RabbitMQ:
 >If you want to set a profile according to your environment (for example `local` or `homol` or `prod`), 
 > use `../mvnw spring-boot:run -Dspring-boot.run.profiles=<profile>`
 > 
->`local` is the default profile is no profile is provided.
+>`local` is the default profile if no profile is provided.
 > 
 >
 > Examples:

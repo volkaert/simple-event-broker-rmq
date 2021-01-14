@@ -14,6 +14,7 @@ public class BrokerConfigForOperationManager {
     private String rabbitMQPortForHttpApi;
     private String rabbitMQUsername;
     private String rabbitMQPassword;
+    private boolean rabbitMQSSLEnabled;
 
     private String catalogAdapterUrl;
 

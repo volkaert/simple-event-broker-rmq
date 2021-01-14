@@ -1,5 +1,7 @@
 package fr.volkaert.event_broker.subscription_manager.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -15,8 +17,12 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 import org.springframework.messaging.handler.annotation.support.MessageHandlerMethodFactory;
 
+import javax.swing.*;
+
 @Configuration
 public class RabbitConfigForSubscriptionManager implements RabbitListenerConfigurer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitConfigForSubscriptionManager.class);
 
     @Autowired
     BrokerConfigForSubscriptionManager config;
@@ -40,10 +46,38 @@ public class RabbitConfigForSubscriptionManager implements RabbitListenerConfigu
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory =
-                new CachingConnectionFactory(config.getRabbitMQHost(), config.getRabbitMQPort());
-        connectionFactory.setUsername(config.getRabbitMQUsername());
-        connectionFactory.setUsername(config.getRabbitMQPassword());
+        LOGGER.info("RabbitMQ config is host:{}, port:{}, username:{}, ssl:{}",
+                config.getRabbitMQHost(),
+                config.getRabbitMQPort(),
+                config.getRabbitMQUsername(),
+                config.isRabbitMQSSLEnabled());
+
+        com.rabbitmq.client.ConnectionFactory cf = new com.rabbitmq.client.ConnectionFactory();
+        cf.setHost(config.getRabbitMQHost());
+        cf.setPort(config.getRabbitMQPort());
+        cf.setUsername(config.getRabbitMQUsername());
+        cf.setPassword(config.getRabbitMQPassword());
+
+        cf.setAutomaticRecoveryEnabled(false);
+        // explicitly set to false otherwise the following  warning is displayed by Spring Boot:
+        //Automatic Recovery was Enabled in the provided connection factory;
+        //while Spring AMQP is generally compatible with this feature, there
+        //are some corner cases where problems arise. Spring AMQP
+        // prefers to use its own recovery mechanisms; when this option is true, you may receive
+        // 'AutoRecoverConnectionNotCurrentlyOpenException's until the connection is recovered.
+        // It has therefore been disabled; if you really wish to enable it, use
+        //'getRabbitConnectionFactory().setAutomaticRecoveryEnabled(true)',
+        //        but this is discouraged.
+
+        if (config.isRabbitMQSSLEnabled()) {
+            try {
+                cf.useSslProtocol();
+            } catch (Exception ex) {
+                LOGGER.error("Error while configuring SSL for RabbitMQ", ex);
+            }
+        }
+
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(cf);
         return connectionFactory;
     }
 
