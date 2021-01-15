@@ -24,7 +24,7 @@ public class MyAuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
 
     @Override
     public void afterPropertiesSet() {
-        setRealmName("SimpleEventBroker2");
+        setRealmName("EventBroker");
         super.afterPropertiesSet();
     }
 }
