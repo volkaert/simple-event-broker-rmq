@@ -7,9 +7,11 @@
     <springProperty name="LOG_PATH" source="logging.file.path" />
     <springProperty name="LOG_FILE" source="logging.file.name" />
 
+    <!--
     <appender name="JsonConsole" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
+    -->
 
     <appender name="JsonRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE}</file>
@@ -24,7 +26,7 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="JsonConsole"/>
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="JsonRollingFile"/>
     </root>
 </configuration>

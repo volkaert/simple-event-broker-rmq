@@ -858,33 +858,16 @@ config files).
 
 The Kibana port is `5601` (so you can open a browser at `http://localhost:5601`).
 
-In the `src/main/resources/logback-spring-homol.xml`, add the lines:
-```
-<appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-    <destination>127.0.0.1:5000</destination>
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
-</appender>
-```
+Update the `src/main/resources/logback-spring-elastic.xml` file to set the address of Elasticsearch where to send the logs
+(update the property `MY_ELASTICSEARCH_URL`).
+> As of now, only the PublicationManager and the SubscriptionManager components have a `logback-spring-elastic.xml` (but
+> this config file could be copied to the `src/main/resources/` directory of any component)
 
-In the installation directory of ELK, update the `logstash/pipeline/logstash.conf` to add the line `codec => json_lines`:
-```
-input {
-	tcp {
-		port => 5000
-		codec => json_lines
-	}
-}
+To start a component using the logback config to send logs to ElasticSearch, use either (depending on your profile):
+- `java -jar -Dspring.profiles.active=local -Dlogging.config=classpath:logback-spring-elastic.xml target/xxx-1.0-SNAPSHOT.jar`
+- `java -jar -Dspring.profiles.active=homol -Dlogging.config=classpath:logback-spring-elastic.xml target/xxx-1.0-SNAPSHOT.jar`
 
-## Add your filters / logstash plugins configuration here
 
-output {
-	elasticsearch {
-		hosts => "elasticsearch:9200"
-		user => "elastic"
-		password => "changeme"
-	}
-}
-```
 
 ## Metricbeat
 

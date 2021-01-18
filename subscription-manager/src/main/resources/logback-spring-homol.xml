@@ -7,9 +7,11 @@
     <springProperty name="LOG_PATH" source="logging.file.path" />
     <springProperty name="LOG_FILE" source="logging.file.name" />
 
+    <!--
     <appender name="JsonConsole" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
+    -->
 
     <appender name="JsonRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE}</file>
@@ -23,15 +25,8 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>127.0.0.1:5000</destination>
-        <!-- encoder is required -->
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
-    </appender>
-
     <root level="INFO">
-        <appender-ref ref="JsonConsole"/>
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="JsonRollingFile"/>
-        <appender-ref ref="stash"/>
     </root>
 </configuration>

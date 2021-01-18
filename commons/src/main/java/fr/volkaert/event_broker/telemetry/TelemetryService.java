@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TelemetryService {
 
     @Autowired
+    TelemetryConfig config;
+
+    @Autowired
     MeterRegistry meterRegistry;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TelemetryService.class);
@@ -31,6 +34,9 @@ public class TelemetryService {
 
 
     private void putInfoInMDC(InflightEvent event, String msgCode, Long duration, TimeUnit durationTimeUnit) {
+        MDC.put("component_name", config.getComponentName());
+        MDC.put("component_instance_id", config.getComponentInstanceId());
+
         MDC.remove("event_type_code");
         MDC.remove("publication_code");
         MDC.remove("subscription_code");
@@ -65,6 +71,8 @@ public class TelemetryService {
     }
 
     private void removeInfoInMDC() {
+        MDC.remove("component_name");
+        MDC.remove("component_instance_id");
         MDC.remove("event_type_code");
         MDC.remove("publication_code");
         MDC.remove("subscription_code");
