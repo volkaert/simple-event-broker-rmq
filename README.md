@@ -846,3 +846,133 @@ cd test-server
 ```
 curl http://localhost:8090/tests/nominal/pub/run
 ```
+
+
+
+## ELK (ElasticSearch / Logstash / Kibana)
+
+Install and run ELK using Docker and Docker-compose: https://github.com/JMousqueton/elk-cec-docker
+
+The Logstash input port is `5000` (the port to use as `destination` in the appender in the `logback-spring-<env>.xml` 
+config files).
+
+The Kibana port is `5601` (so you can open a browser at `http://localhost:5601`).
+
+In the `src/main/resources/logback-spring-homol.xml`, add the lines:
+```
+<appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+    <destination>127.0.0.1:5000</destination>
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+</appender>
+```
+
+In the installation directory of ELK, update the `logstash/pipeline/logstash.conf` to add the line `codec => json_lines`:
+```
+input {
+	tcp {
+		port => 5000
+		codec => json_lines
+	}
+}
+
+## Add your filters / logstash plugins configuration here
+
+output {
+	elasticsearch {
+		hosts => "elasticsearch:9200"
+		user => "elastic"
+		password => "changeme"
+	}
+}
+```
+
+## Metricbeat
+
+https://www.elastic.co/guide/en/beats/metricbeat/master/metricbeat-installation-configuration.html
+
+Download metricbeat:
+```
+curl -L -O https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-7.10.2-linux-x86_64.tar.gz
+tar xzvf metricbeat-7.10.2-linux-x86_64.tar.gz
+```
+
+Edit the `metricbeat.yml` file to set the elastic host and username and password:
+```
+# ---------------------------- Elasticsearch Output ----------------------------
+output.elasticsearch:
+  # Array of hosts to connect to.
+  hosts: ["localhost:9200"]
+
+  # Protocol - either `http` (default) or `https`.
+  #protocol: "https"
+
+  # Authentication credentials - either API key or username/password.
+  #api_key: "id:api_key"
+  username: "elastic"
+  password: "changeme"
+```
+
+Metricbeat comes with predefined assets for parsing, indexing, and visualizing your data. To load these assets:
+```
+./metricbeat setup -e
+```
+
+Before starting Metricbeat, modify the user credentials in metricbeat.yml and specify a user who is authorized to publish events.
+```
+sudo chown root metricbeat.yml 
+sudo chown root modules.d/system.yml 
+sudo ./metricbeat -e
+```
+
+Metricbeat comes with pre-built Kibana dashboards and UIs for visualizing log data. You loaded the dashboards earlier when you ran the setup command.
+
+To open the dashboards, point your browser to `http://localhost:5601`, replacing localhost with the name of the Kibana host.
+
+In the side navigation, click Discover. To see Metricbeat data, make sure the predefined `metricbeat-*` index pattern is selected.
+
+If you don’t see data in Kibana, try changing the time filter to a larger range. By default, Kibana shows the last 15 minutes.
+
+The modules.d directory contains default configurations for all the modules available in Metricbeat. 
+To enable or disable specific module configurations under modules.d, run the modules enable or modules disable command.
+
+```
+sudo ./metricbeat modules enable prometheus
+```
+
+https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-metricbeat.html
+Edit the `modules.d\prometheus.yml` file:
+- Replace `hosts: ["localhost:9090"]` with `hosts: ["localhost:8083"]` (to collect metric from the Subscription Manager)
+- Replace `metrics_path: /metrics` with `metrics_path: /metrics/prometheus`
+
+Set root as the owner of the `prometheus.yml` file:
+```
+sudo chown root modules.d/prometheus.yml
+```
+
+Run metricbeat:
+```
+sudo ./metricbeat -e
+```
+
+Examples of collected metrics:
+```
+metricset.name = collector
+
+prometheus.labels.instance = localhost:8083
+prometheus.labels.job = prometheus
+
+prometheus.labels.component_name = subscription-manager
+prometheus.labels.component_instance_id = subscription-manager-0
+prometheus.labels.host_name = t460S
+
+prometheus.labels.publication_code = TestSever-Nominal-PUB
+prometheus.labels.subscription_code = TestSever-Nominal-SUB
+prometheus.labels.event_type_code = TestSever-Nominal-EVT
+
+prometheus.metrics.event_deliveries_attempted_total
+prometheus.metrics.event_deliveries_requested_total
+prometheus.metrics.event_deliveries_succeeded_total
+prometheus.metrics.event_delivery_duration_seconds_count
+prometheus.metrics.event_delivery_duration_seconds_max
+prometheus.metrics.event_delivery_duration_seconds_sum
+```

@@ -41,3 +41,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/metricbeat/metricbeat-7.10.2-linux-x86_64/
