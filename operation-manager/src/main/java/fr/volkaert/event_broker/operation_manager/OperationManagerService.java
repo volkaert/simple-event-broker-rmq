@@ -150,7 +150,6 @@ public class OperationManagerService {
     }
 
     public QueueInfo getRabbitMQQueueInfoForSubscription(String subscriptionCode) {
-        // QueueInformation qi = rabbitAdmin.getRabbitTemplate().getggetQueueInfo(null);
         String queueNameForSubscription = RabbitMQNames.getQueueNameForSubscription(subscriptionCode);
         Client rabbitMQClient = getRabbitMQClient();
         QueueInfo queueInfo = rabbitMQClient.getQueue("/", queueNameForSubscription);
@@ -167,7 +166,8 @@ public class OperationManagerService {
         synchronized (rabbitMQClientLock) {
             if (rabbitMQClient == null) {
                 try {
-                    String urlForHttpAPi = String.format("http://%s:%s/api", config.getRabbitMQHost(), config.getRabbitMQPortForHttpApi());
+                    String httpOrHttps = config.isRabbitMQSSLEnabled() ? "https" : "http";
+                    String urlForHttpAPi = String.format("%s://%s:%s/api", httpOrHttps, config.getRabbitMQHost(), config.getRabbitMQPortForHttpApi());
                     rabbitMQClient = new Client(new ClientParameters()
                             .url(urlForHttpAPi)
                             .username(config.getRabbitMQUsername())
