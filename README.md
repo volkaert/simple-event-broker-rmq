@@ -982,3 +982,16 @@ prometheus.metrics.event_delivery_duration_seconds_count
 prometheus.metrics.event_delivery_duration_seconds_max
 prometheus.metrics.event_delivery_duration_seconds_sum
 ```
+
+
+
+## Various Test
+
+### Test of Purge Queue
+```
+curl --header "Content-Type: application/json" --request POST --data '{"publicationCode": "NominalTest-PUB","payload": { "message": "NominalTest" }, "timeToLiveInSeconds": 180 }' http://localhost:8081/events
+curl http://localhost:8087/subscriptions/NominalTest-SUB1/events/next
+curl --request DELETE http://localhost:8087/subscriptions/NominalTest-SUB1/events/next
+curl --request DELETE http://localhost:8087/subscriptions/NominalTest-SUB1/events
+curl http://localhost:8087/subscriptions/NominalTest-SUB1/rabbitmq/queue/info
+```

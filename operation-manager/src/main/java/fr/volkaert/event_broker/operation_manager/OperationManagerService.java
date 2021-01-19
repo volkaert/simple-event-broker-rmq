@@ -59,22 +59,25 @@ public class OperationManagerService {
     private InflightEvent getOrDeleteNextEventForSubscription(String subscriptionCode, boolean ack) {
         InflightEvent event = null;
         String queueNameForSubscription = RabbitMQNames.getQueueNameForSubscription(subscriptionCode);
-        MyRabbitTemplate rabbitTemplate = new MyRabbitTemplate(rabbitMQConnectionFactory);
-        rabbitTemplate.setMessageConverter(jackson2JsonMessageConverter);
+        MyRabbitTemplate rabbitTemplate = getMyRabbitTemplate();
         Message message = rabbitTemplate.execute(channel -> {
-            GetResponse response = channel.basicGet(queueNameForSubscription, ack);
-            if (response != null) {
-                long deliveryTag = response.getEnvelope().getDeliveryTag();
-                if (ack)
-                    channel.basicAck(deliveryTag, false);   // false: ack of the last message only
-                else
-                    channel.basicReject(deliveryTag, true); // true: requeue the last message
-                Message msg = rabbitTemplate.myOwnBuildMessageFromResponse(response);
-                return msg;
+            try {
+                GetResponse response = channel.basicGet(queueNameForSubscription, ack);
+                if (response != null) {
+                    long deliveryTag = response.getEnvelope().getDeliveryTag();
+                    if (ack)
+                        channel.basicAck(deliveryTag, false);   // false: ack of the last message only
+                    else
+                        channel.basicReject(deliveryTag, true); // true: requeue the last message
+                    Message msg = rabbitTemplate.myOwnBuildMessageFromResponse(response);
+                    return msg;
+                }
+                return null;
+            } catch (Exception ex) {
+                LOGGER.error("Error while getting or deleting or event", ex);
+                return null;
             }
-            return null;
         });
-        rabbitTemplate.destroy();
         if (message != null) {
             event = (InflightEvent)jackson2JsonMessageConverter.fromMessage(message);
         }
@@ -97,22 +100,25 @@ public class OperationManagerService {
     private InflightEvent getOrDeleteNextEventInDeadLetterQueueForSubscription(String subscriptionCode, boolean ack) {
         InflightEvent event = null;
         String deadLetterQueueNameForSubscription = RabbitMQNames.getDeadLetterQueueNameForSubscription(subscriptionCode);
-        MyRabbitTemplate rabbitTemplate = new MyRabbitTemplate(rabbitMQConnectionFactory);
-        rabbitTemplate.setMessageConverter(jackson2JsonMessageConverter);
+        MyRabbitTemplate rabbitTemplate = getMyRabbitTemplate();
         Message message = rabbitTemplate.execute(channel -> {
-            GetResponse response = channel.basicGet(deadLetterQueueNameForSubscription, ack);
-            if (response != null) {
-                long deliveryTag = response.getEnvelope().getDeliveryTag();
-                if (ack)
-                    channel.basicAck(deliveryTag, false);   // false: ack of the last message only
-                else
-                    channel.basicReject(deliveryTag, true); // true: requeue the last message
-                Message msg = rabbitTemplate.myOwnBuildMessageFromResponse(response);
-                return msg;
+            try {
+                GetResponse response = channel.basicGet(deadLetterQueueNameForSubscription, ack);
+                if (response != null) {
+                    long deliveryTag = response.getEnvelope().getDeliveryTag();
+                    if (ack)
+                        channel.basicAck(deliveryTag, false);   // false: ack of the last message only
+                    else
+                        channel.basicReject(deliveryTag, true); // true: requeue the last message
+                    Message msg = rabbitTemplate.myOwnBuildMessageFromResponse(response);
+                    return msg;
+                }
+                return null;
+            } catch (Exception ex) {
+                LOGGER.error("Error while getting or deleting or event", ex);
+                return null;
             }
-            return null;
         });
-        rabbitTemplate.destroy();
         if (message != null) {
             event = (InflightEvent) jackson2JsonMessageConverter.fromMessage(message);
         }
@@ -146,6 +152,19 @@ public class OperationManagerService {
                 }
             }
             return message;
+        }
+    }
+
+    private Object myRabbitTemplateLock = new Object();
+    private MyRabbitTemplate myRabbitTemplate = null;
+
+    private MyRabbitTemplate getMyRabbitTemplate() {
+        synchronized (myRabbitTemplateLock) {
+            if (myRabbitTemplate == null) {
+                myRabbitTemplate = new MyRabbitTemplate(rabbitMQConnectionFactory);
+                myRabbitTemplate.setMessageConverter(jackson2JsonMessageConverter);
+            }
+            return  myRabbitTemplate;
         }
     }
 
