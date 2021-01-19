@@ -57,8 +57,25 @@
         </headers>
     </appender>
 
+    <property resource="application.properties" />
+    <springProperty name="LOG_PATH" source="logging.file.path" />
+    <springProperty name="LOG_FILE" source="logging.file.name" />
+
+    <appender name="JsonRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy-MM-dd}.%i.${LOG_FILE}</fileNamePattern>
+            <maxFileSize>${logging.logback.rollingpolicy.max-file-size}</maxFileSize>
+            <totalSizeCap>${logging.logback.rollingpolicy.total-size-cap}</totalSizeCap>
+            <maxHistory>${logging.logback.rollingpolicy.max-history}</maxHistory>
+            <cleanHistoryOnStart>${logging.logback.rollingpolicy.clean-history-on-start}</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="JsonRollingFile"/>
         <appender-ref ref="ELASTIC"/>
     </root>
 </configuration>

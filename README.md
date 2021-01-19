@@ -712,11 +712,42 @@ Default login and password are "guest".
 You can start a RabbitMQ server locally using the `start-rabbitmq.sh` script file but it requires that Docker is installed on 
 the machine.
 
-If you already have a RabbitMQ server, then you will have to update the following properties files to set the URL and the 
-login/password to access RabbitMQ:
-- `publication-manager/src/main/resources/application-<env>.properties`
-- `subscription-manager/src/main/resources/application-<env>.properties`
-- `operation-manager/src/main/resources/application-<env>.properties`
+If you already have a RabbitMQ server for your homologation environnement, then you will have to update the following 
+properties files to set the URL and the login/password to access RabbitMQ:
+- `publication-manager/src/main/resources/application-homol.properties`
+- `subscription-manager/src/main/resources/application-homol.properties`
+- `operation-manager/src/main/resources/application-homol.properties`
+
+Set the following properties in the config files: 
+```
+# RabbitMQ
+broker.rabbitmq-host = PUT_HERE_THE_HOST_FOR_HOMOL
+# 5671 is with SSL, 5672 withOUT SSL
+broker.rabbitmq-port = 5671
+broker.rabbitmq-username = PUT_HERE_THE_USERNAME_FOR_HOMOL
+broker.rabbitmq-password = PUT_HERE_THE_PASSWORD_FOR_HOMOL
+broker.rabbitmq-ssl-enabled = true
+```
+
+
+### Elastic config for logs
+
+If you want to have logs not only in the console and in rolling files, but also in ElasticSearch, then you will have to 
+update the following properties files to set the URL and the login/password to access ElasticSearch:
+- `publication-manager/src/main/resources/logback-spring-elastic.properties`
+- `subscription-manager/src/main/resources/logback-spring-elastic.properties`
+>As of now, Elastic logs are only available for PublicationManager and Subscription Manager.
+
+Set the following property in the config files:
+```
+<property scope="context" name="MY_ELASTICSEARCH_URL" value="http://elastic:changeme@localhost:9200" />
+```
+>In `http://elastic:changeme@localhost:9200` URL, `elastic` is the username and `changeme` is the password.
+
+To start a PublicationManager with Elastic logs, run: `java -jar -Dspring.profiles.active=homol -Dlogging.config=classpath:logback-spring-elastic.xml target/publication-manager-1.0-SNAPSHOT.jar`
+
+To start a SubscriptionManager with Elastic logs, run: `java -jar -Dspring.profiles.active=homol -Dlogging.config=classpath:logback-spring-elastic.xml target/subscription-manager-1.0-SNAPSHOT.jar`
+
 
 
 ### Run the various components
@@ -756,24 +787,16 @@ login/password to access RabbitMQ:
 > 
 > `export SPRING_PROFILES_ACTIVE=prod`
 
->By default, the `local` profile uses standard logs in the console, and the `homol` profile uses JSON logs both in the console
-> and in rolling files.
+>By default, the `local` profile uses standard logs in the console, and the `homol` profile uses standard logs in the console
+> and JSON in rolling files.
 >
-> If you want to have JSON logs with the `local` profile you can do: 
+> If you want to have JSON logs in rolling files  with the `local` profile you can do: 
 > 
 >`../mvnw clean spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.arguments=--logging.config=classpath:logback-spring-homol.xml`
 >
 > or
 >
 > `java -jar -Dspring.profiles.active=local -Dlogging.config=classpath:logback-spring-homol.xml target/xxx-1.0-SNAPSHOT.jar`
->
-> If you want to have standard logs in the console with the `homol` profile you can do:
->
->`../mvnw clean spring-boot:run -Dspring-boot.run.profiles=homol -Dspring-boot.run.arguments=--logging.config=classpath:logback-spring-local.xml`
-> 
-> or
-> 
-> `java -jar -Dspring.profiles.active=homol -Dlogging.config=classpath:logback-spring-local.xml target/xxx-1.0-SNAPSHOT.jar`
 
 
 Compile everything:
@@ -859,7 +882,7 @@ config files).
 The Kibana port is `5601` (so you can open a browser at `http://localhost:5601`).
 
 Update the `src/main/resources/logback-spring-elastic.xml` file to set the address of Elasticsearch where to send the logs
-(update the property `MY_ELASTICSEARCH_URL`).
+(update the property `MY_ELASTICSEARCH_URL`. This URL is of the form `<scheme>://<username>:<password>@<host>:<port>`).
 > As of now, only the PublicationManager and the SubscriptionManager components have a `logback-spring-elastic.xml` (but
 > this config file could be copied to the `src/main/resources/` directory of any component)
 
