@@ -16,6 +16,8 @@ public class EventToSubscriber extends EventToSubscriberWithoutPayload {
     private Object payload;
 
     public static EventToSubscriber from(InflightEvent inflightEvent) {
+        if (inflightEvent == null) return null;
+
         EventToSubscriber eventToSubscriber = new EventToSubscriber();
         eventToSubscriber.setBusinessId(inflightEvent.getBusinessId());
         eventToSubscriber.setPublicationCode(inflightEvent.getPublicationCode());

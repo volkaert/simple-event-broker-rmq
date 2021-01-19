@@ -30,7 +30,7 @@ public class OperationAdapterService {
         String query = String.format("%s/subscriptions/%s/events/next", config.getOperationManagerUrl(), subscriptionCode);
         ResponseEntity<InflightEvent> responseEntity = restTemplate.exchange(query, HttpMethod.GET, null, InflightEvent.class);
         InflightEvent inflightEvent = responseEntity.getBody();
-        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);
+        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);    // CAUTION: inflightEvent and eventToSubscriber can be null !
         return eventToSubscriber;
     }
 
@@ -38,7 +38,7 @@ public class OperationAdapterService {
         String query = String.format("%s/subscriptions/%s/events/next", config.getOperationManagerUrl(), subscriptionCode);
         ResponseEntity<InflightEvent> responseEntity = restTemplate.exchange(query, HttpMethod.DELETE, null, InflightEvent.class);
         InflightEvent inflightEvent = responseEntity.getBody();
-        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);
+        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);    // CAUTION: inflightEvent and eventToSubscriber can be null !
         return eventToSubscriber;
     }
 
@@ -51,7 +51,7 @@ public class OperationAdapterService {
         String query = String.format("%s/subscriptions/%s/dead-letter-queue/events/next", config.getOperationManagerUrl(), subscriptionCode);
         ResponseEntity<InflightEvent> responseEntity = restTemplate.exchange(query, HttpMethod.GET, null, InflightEvent.class);
         InflightEvent inflightEvent = responseEntity.getBody();
-        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);
+        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);    // CAUTION: inflightEvent and eventToSubscriber can be null !
         return eventToSubscriber;
     }
 
@@ -59,7 +59,7 @@ public class OperationAdapterService {
         String query = String.format("%s/subscriptions/%s/dead-letter-queue/events/next", config.getOperationManagerUrl(), subscriptionCode);
         ResponseEntity<InflightEvent> responseEntity = restTemplate.exchange(query, HttpMethod.DELETE, null, InflightEvent.class);
         InflightEvent inflightEvent = responseEntity.getBody();
-        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);
+        EventToSubscriber eventToSubscriber = EventToSubscriber.from(inflightEvent);    // CAUTION: inflightEvent and eventToSubscriber can be null !
         return eventToSubscriber;
     }
 
