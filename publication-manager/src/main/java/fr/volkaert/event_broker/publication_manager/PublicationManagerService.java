@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -96,6 +97,19 @@ public class PublicationManagerService {
         if (! publication.isActive()) {
             String msg = telemetryService.eventPublicationRejectedDueToInactivePublication(inflightEvent);
             throw new BrokerException(HttpStatus.BAD_REQUEST, msg);
+        }
+
+        if (! StringUtils.isEmpty(publication.getAuthClientIds())) {
+            if (! StringUtils.isEmpty(inflightEvent.getAuthClientId())) {
+                if (! publication.getAuthClientIds().contains(inflightEvent.getAuthClientId())) {
+                    String msg = telemetryService.eventPublicationRejectedDueToInvalidAuthClientId(inflightEvent);
+                    throw new BrokerException(HttpStatus.FORBIDDEN, msg);
+                }
+            }
+            else {
+                String msg = telemetryService.eventPublicationRejectedDueToInvalidAuthClientId(inflightEvent);
+                throw new BrokerException(HttpStatus.FORBIDDEN, msg);
+            }
         }
 
         String eventTypeCode = publication.getEventTypeCode();

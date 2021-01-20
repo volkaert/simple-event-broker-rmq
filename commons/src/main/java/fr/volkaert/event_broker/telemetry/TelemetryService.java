@@ -175,6 +175,29 @@ public class TelemetryService {
         return msg;
     }
 
+    public synchronized String eventPublicationRejectedDueToInvalidAuthClientId(InflightEvent event) {
+        putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_AUTH_CLIENT_ID", null, null);
+        String msg = "";
+        try {
+            String authClientId = event.getAuthClientId();
+            msg = String.format("Event publication rejected due to invalid auth client id '%s'. Event is %s.", authClientId, event.toShortLog());
+            LOGGER.error(msg);
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording log for eventPublicationRejectedDueToInvalidAuthClientId", ex);
+        }
+        try {
+            Counter counter1 = meterRegistry.counter("event_publications_rejected_total");
+            counter1.increment();
+            // do NOT use authClientId as tag because in case of an unknown authClientId, its potential values are unbounded !
+            Counter counter2 = meterRegistry.counter("event_publications_rejected_due_to_invalid_auth_client_id_total");
+            counter2.increment();
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording metrics for eventPublicationRejectedDueToInvalidAuthClientId", ex);
+        }
+        removeInfoInMDC();
+        return msg;
+    }
+
     public synchronized String eventPublicationRejectedDueToInvalidEventTypeCode(InflightEvent event) {
         putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_EVENT_TYPE_CODE", null, null);
         String msg = "";

@@ -554,6 +554,7 @@ The following `message_code` are used:
 - `PUBLICATION_REJECTED_MISSING_PUBLICATION_CODE`
 - `PUBLICATION_REJECTED_INVALID_PUBLICATION_CODE`
 - `PUBLICATION_REJECTED_INACTIVE_PUBLICATION`
+- `PUBLICATION_REJECTED_INVALID_AUTH_CLIENT_ID`
 - `PUBLICATION_REJECTED_INVALID_EVENT_TYPE_CODE`
 - `PUBLICATION_REJECTED_INACTIVE_EVENT_TYPE`
 - `PUBLICATION_ATTEMPTED`
@@ -589,6 +590,7 @@ The following metrics are produced:
 - Counter `event_publications_rejected_due_to_missing_publication_code_total`
 - Counter `event_publications_rejected_due_to_invalid_publication_code_total`
 - Counter `event_publications_rejected_due_to_inactive_publication_total`
+- Counter `event_publications_rejected_due_to_invalid_auth_client_id_total`
 - Counter `event_publications_rejected_due_to_invalid_event_type_code_total`
 - Counter `event_publications_rejected_due_to_inactive_event_type_total`
 - Counter `event_publications_attempted_total`
@@ -985,7 +987,7 @@ prometheus.metrics.event_delivery_duration_seconds_sum
 
 
 
-## Various Test
+## Various Tests
 
 ### Test of Purge Queue
 ```
