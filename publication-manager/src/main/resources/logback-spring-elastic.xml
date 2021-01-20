@@ -8,8 +8,8 @@
     <!-- see https://github.com/internetitem/logback-elasticsearch-appender -->
     <appender name="ELASTIC" class="com.internetitem.logback.elasticsearch.ElasticsearchAppender">
         <url>${MY_ELASTICSEARCH_URL}/_bulk</url>
-        <index>logs-%date{yyyy-MM-dd}</index>
-        <type>tester</type>
+        <index>mylogs-%date{yyyy-MM-dd}</index>
+        <type>_doc</type>
         <!--<loggerName>es-logger</loggerName>--> <!-- optional -->
         <!--<errorLoggerName>es-error-logger</errorLoggerName>--> <!-- optional -->
         <connectTimeout>30000</connectTimeout> <!-- optional (in ms, default 30000) -->

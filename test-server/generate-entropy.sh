@@ -7,5 +7,5 @@ while true; do
   curl http://localhost:8090/tests/nominal/sub/reject
   sleep 20
   curl http://localhost:8090/tests/nominal/sub/accept
-  sleep 20
+  sleep 30
 done
