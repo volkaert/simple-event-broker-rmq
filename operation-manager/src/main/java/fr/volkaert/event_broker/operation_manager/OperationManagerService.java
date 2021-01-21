@@ -85,8 +85,9 @@ public class OperationManagerService {
     }
 
     public void deleteAllEventsForSubscription(String subscriptionCode) {
-        while (deleteNextEventForSubscription(subscriptionCode) != null) {
-        }
+        String queueNameForSubscription = RabbitMQNames.getQueueNameForSubscription(subscriptionCode);
+        Client rabbitMQClient = getRabbitMQClient();
+        rabbitMQClient.purgeQueue("/", queueNameForSubscription);
     }
 
     public InflightEvent getNextEventInDeadLetterQueueForSubscription(String subscriptionCode) {
@@ -126,9 +127,11 @@ public class OperationManagerService {
     }
 
     public void deleteAllEventsInDeadLetterQueueForSubscription(String subscriptionCode) {
-        while (deleteNextEventInDeadLetterQueueForSubscription(subscriptionCode) != null) {
-        }
+        String queueNameForSubscription = RabbitMQNames.getDeadLetterQueueNameForSubscription(subscriptionCode);
+        Client rabbitMQClient = getRabbitMQClient();
+        rabbitMQClient.purgeQueue("/", queueNameForSubscription);
     }
+
 
     // Ugly !!! But this is the only way I found to have access to those fucking methods !!!
     private static class MyRabbitTemplate extends RabbitTemplate {
