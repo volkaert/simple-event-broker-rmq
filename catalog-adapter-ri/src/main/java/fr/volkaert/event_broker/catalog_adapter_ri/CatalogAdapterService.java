@@ -31,6 +31,9 @@ public class CatalogAdapterService {
     @Qualifier("RestTemplateForCatalog")
     RestTemplate restTemplate;
 
+    @Autowired
+    CatalogCache cache;
+
     protected class RemoteCatalogBackendForCache implements CatalogBackendForCache {
         @Override
         public List<EventType> getEventTypes() {
@@ -53,19 +56,11 @@ public class CatalogAdapterService {
             return responseEntity.getBody();
         }
     }
-    private CatalogCache cache;
-
     @PostConstruct
     public void init() {
         if (! StringUtils.isEmpty(catalogUrl)) {
-            cache = createCatalogCache();
             cache.setBackend(new RemoteCatalogBackendForCache());
         };
-    }
-
-    @Bean(name="CatalogCacheForCatalogAdapter")
-    public CatalogCache createCatalogCache() {
-        return new CatalogCache();
     }
 
     public List<EventType> getEventTypes() {
