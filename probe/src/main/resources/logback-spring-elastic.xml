@@ -1,0 +1,81 @@
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <property scope="context" name="MY_ELASTICSEARCH_URL" value="http://elastic:changeme@localhost:9200" />
+
+    <!-- see https://github.com/internetitem/logback-elasticsearch-appender -->
+    <appender name="ELASTIC" class="com.internetitem.logback.elasticsearch.ElasticsearchAppender">
+        <url>${MY_ELASTICSEARCH_URL}/_bulk</url>
+        <index>mylogs-%date{yyyy-MM-dd}</index>
+        <type>_doc</type>
+        <!--<loggerName>es-logger</loggerName>--> <!-- optional -->
+        <!--<errorLoggerName>es-error-logger</errorLoggerName>--> <!-- optional -->
+        <connectTimeout>30000</connectTimeout> <!-- optional (in ms, default 30000) -->
+        <errorsToStderr>false</errorsToStderr> <!-- optional (default false) -->
+        <includeCallerData>false</includeCallerData> <!-- optional (default false) -->
+        <logsToStderr>false</logsToStderr> <!-- optional (default false) -->
+        <maxQueueSize>104857600</maxQueueSize> <!-- optional (default 104857600) -->
+        <maxRetries>3</maxRetries> <!-- optional (default 3) -->
+        <readTimeout>30000</readTimeout> <!-- optional (in ms, default 30000) -->
+        <sleepTime>250</sleepTime> <!-- optional (in ms, default 250) -->
+        <rawJsonMessage>false</rawJsonMessage> <!-- optional (default false) -->
+        <!-- includeMdc set to true by Fabrice -->
+        <includeMdc>true</includeMdc> <!-- optional (default false) -->
+        <!-- maxMessageSize set to -1 by Fabrice -->
+        <maxMessageSize>-1</maxMessageSize> <!-- optional (default -1) -->
+        <authentication class="com.internetitem.logback.elasticsearch.config.BasicAuthentication" /> <!-- optional -->
+        <properties>
+            <property>
+                <name>host</name>
+                <value>${HOSTNAME}</value>
+                <allowEmpty>false</allowEmpty>
+            </property>
+            <property>
+                <name>severity</name>
+                <value>%level</value>
+            </property>
+            <property>
+                <name>thread</name>
+                <value>%thread</value>
+            </property>
+            <property>
+                <name>stacktrace</name>
+                <value>%ex</value>
+            </property>
+            <property>
+                <name>logger</name>
+                <value>%logger</value>
+            </property>
+        </properties>
+        <headers>
+            <header>
+                <name>Content-Type</name>
+                <value>application/json</value>
+            </header>
+        </headers>
+    </appender>
+
+    <property resource="application.properties" />
+    <springProperty name="LOG_PATH" source="logging.file.path" />
+    <springProperty name="LOG_FILE" source="logging.file.name" />
+
+    <appender name="JsonRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy-MM-dd}.%i.${LOG_FILE}</fileNamePattern>
+            <maxFileSize>${logging.logback.rollingpolicy.max-file-size}</maxFileSize>
+            <totalSizeCap>${logging.logback.rollingpolicy.total-size-cap}</totalSizeCap>
+            <maxHistory>${logging.logback.rollingpolicy.max-history}</maxHistory>
+            <cleanHistoryOnStart>${logging.logback.rollingpolicy.clean-history-on-start}</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="JsonRollingFile"/>
+        <appender-ref ref="ELASTIC"/>
+    </root>
+</configuration>
