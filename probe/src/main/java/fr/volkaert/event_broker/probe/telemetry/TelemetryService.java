@@ -22,16 +22,19 @@ public class TelemetryService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TelemetryService.class);
 
-    private void putInfoInMDC(ProbeEvent event, String msgCode, Long duration, TimeUnit durationTimeUnit) {
+    private void putInfoInMDC(ProbeEvent event, String msgCode, String msgDetail, Long duration, TimeUnit durationTimeUnit) {
         MDC.remove("event_type_code");
         MDC.remove("publication_code");
         MDC.remove("subscription_code");
         MDC.remove("message_code");
+        MDC.remove("message_detail");
         MDC.remove("duration_in_sec");
         MDC.remove("duration_in_millis");
         MDC.remove("duration");
 
         MDC.put("message_code", msgCode);
+        MDC.put("message_detail", msgDetail);
+
         if (event != null) {
             String eventTypeCode = event.getEventTypeCode();
             if (eventTypeCode != null) {
@@ -61,13 +64,14 @@ public class TelemetryService {
         MDC.remove("publication_code");
         MDC.remove("subscription_code");
         MDC.remove("message_code");
+        MDC.remove("message_detail");
         MDC.remove("duration_in_sec");
         MDC.remove("duration_in_millis");
         MDC.remove("duration");
     }
 
     public synchronized String probePublicationAttempted(ProbeEvent event) {
-        putInfoInMDC(event, "PROBE_PUBLICATION_ATTEMPTED", null, null);
+        putInfoInMDC(event, "PROBE_PUBLICATION_ATTEMPTED", null, null, null);
         String msg = "";
         try {
             msg = String.format("Probe event publication attempted. Event is %s.", event);
@@ -88,7 +92,7 @@ public class TelemetryService {
     public synchronized String probePublicationSucceeded(ProbeEvent event, Instant publicationStart) {
         Instant publicationEnd = Instant.now();
         Long durationInMillis = publicationStart != null ? Duration.between(publicationStart, publicationEnd).toMillis() : null;
-        putInfoInMDC(event, "PROBE_PUBLICATION_SUCCEEDED", durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "PROBE_PUBLICATION_SUCCEEDED", null, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Probe event publication succeeded. Event is %s.", event);
@@ -112,7 +116,7 @@ public class TelemetryService {
     public synchronized String probePublicationFailed(ProbeEvent event, Exception exception, Instant publicationStart) {
         Instant publicationEnd = Instant.now();
         Long durationInMillis = publicationStart != null ? Duration.between(publicationStart, publicationEnd).toMillis() : null;
-        putInfoInMDC(event, "PROBE_PUBLICATION_FAILED", durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "PROBE_PUBLICATION_FAILED", null, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Probe event publication failed. Exception is `%s`. Event is %s.",
@@ -135,6 +139,7 @@ public class TelemetryService {
     }
 
     public synchronized String probeEventReceived(ProbeEvent event) {
+        putInfoInMDC(event, "PROBE_RECEIVED", null, null,TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Probe event received. Event is %s.", event);
@@ -152,28 +157,8 @@ public class TelemetryService {
         return msg;
     }
 
-    public synchronized String probeEventReceivedAfterThreshold(ProbeEvent event, long roundTripDurationInMillis, long thresholdInSeconds) {
-        putInfoInMDC(event, "PROBE_RECEIVED_AFTER_THRESHOLD", roundTripDurationInMillis, TimeUnit.MILLISECONDS);
-        String msg = "";
-        try {
-            msg = String.format("Probe event received after threshold. RoundTripDurationInMillis is %s. ThresholdInSeconds is %s. Event is %s.",
-                    roundTripDurationInMillis, thresholdInSeconds, event);
-            LOGGER.error(msg);
-        } catch (Exception ex) {
-            LOGGER.error("Error while recording log for probeEventReceivedAfterThreshold", ex);
-        }
-        try {
-            Counter counter1 = meterRegistry.counter("probe_event_received_after_threshold_total");
-            counter1.increment();
-        } catch (Exception ex) {
-            LOGGER.error("Error while recording metric for probeEventReceivedAfterThreshold", ex);
-        }
-        removeInfoInMDC();
-        return msg;
-    }
-
     public synchronized String probeEventReceivedBeforeThreshold(ProbeEvent event, long roundTripDurationInMillis, long thresholdInSeconds) {
-        putInfoInMDC(event, "PROBE_RECEIVED_BEFORE_THRESHOLD", roundTripDurationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "PROBE_SUCCEEDED", null, roundTripDurationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Probe event received before threshold. RoundTripDurationInMillis is %s. ThresholdInSeconds is %s. Event is %s.",
@@ -192,8 +177,28 @@ public class TelemetryService {
         return msg;
     }
 
+    public synchronized String probeEventReceivedAfterThreshold(ProbeEvent event, long roundTripDurationInMillis, long thresholdInSeconds) {
+        putInfoInMDC(event, "PROBE_FAILED", "DELIVERED_BUT_AFTER_THRESHOLD", roundTripDurationInMillis, TimeUnit.MILLISECONDS);
+        String msg = "";
+        try {
+            msg = String.format("Probe event received after threshold. RoundTripDurationInMillis is %s. ThresholdInSeconds is %s. Event is %s.",
+                    roundTripDurationInMillis, thresholdInSeconds, event);
+            LOGGER.error(msg);
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording log for probeEventReceivedAfterThreshold", ex);
+        }
+        try {
+            Counter counter1 = meterRegistry.counter("probe_event_received_after_threshold_total");
+            counter1.increment();
+        } catch (Exception ex) {
+            LOGGER.error("Error while recording metric for probeEventReceivedAfterThreshold", ex);
+        }
+        removeInfoInMDC();
+        return msg;
+    }
+
     public synchronized String probeEventNotReceivedBeforeThreshold(ProbeEvent event, long durationInMillisSinceLastPublication, long thresholdInSeconds) {
-        putInfoInMDC(event, "PROBE_NOT_RECEIVED_BEFORE_THRESHOLD", durationInMillisSinceLastPublication, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "PROBE_FAILED" , "NOT_DELIVERED_BEFORE_THRESHOLD", durationInMillisSinceLastPublication, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Probe event NOT received before threshold. DurationInMillisSinceLastPublication is %s. ThresholdInSeconds is %s. Published probe event was %s.",
@@ -213,7 +218,7 @@ public class TelemetryService {
     }
 
     public synchronized String publishedProbeEventAndReceivedProbeEventDoNotMatch(ProbeEvent lastProbeEventPublished, ProbeEvent lastProbeEventReceived) {
-        putInfoInMDC(lastProbeEventReceived, "PROBE_PUBLISHED_AND_RECEIVED_DO_NOT_MATCH", null, null);
+        putInfoInMDC(lastProbeEventReceived, "PROBE_FAILED", "PUBLISHED_AND_RECEIVED_PROBES_DO_NOT_MATCH", null, null);
         String msg = "";
         try {
             msg = String.format("Published probe event and received probe event do NOT match. Published probe event is %s. Received probe event is %s.",

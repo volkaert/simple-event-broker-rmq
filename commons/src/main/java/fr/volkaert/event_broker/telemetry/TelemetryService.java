@@ -30,10 +30,9 @@ public class TelemetryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TelemetryService.class);
 
     private final Map<String, AtomicLong> pendingPublicationGauges = new ConcurrentHashMap<>();
-    //private final Map<String, AtomicLong> pendingDeliveriesGauges = new ConcurrentHashMap<>();
 
 
-    private void putInfoInMDC(InflightEvent event, String msgCode, Long duration, TimeUnit durationTimeUnit) {
+    private void putInfoInMDC(InflightEvent event, String msgCode, String msgDetail, Long duration, TimeUnit durationTimeUnit) {
         MDC.put("component_name", config.getComponentName());
         MDC.put("component_instance_id", config.getComponentInstanceId());
 
@@ -41,11 +40,14 @@ public class TelemetryService {
         MDC.remove("publication_code");
         MDC.remove("subscription_code");
         MDC.remove("message_code");
+        MDC.remove("message_detail");
         MDC.remove("duration_in_sec");
         MDC.remove("duration_in_millis");
         MDC.remove("duration");
 
         MDC.put("message_code", msgCode);
+        MDC.put("message_detail", msgDetail);
+
         if (event != null) {
             String eventTypeCode = event.getEventTypeCode();
             if (eventTypeCode != null) {
@@ -77,6 +79,7 @@ public class TelemetryService {
         MDC.remove("publication_code");
         MDC.remove("subscription_code");
         MDC.remove("message_code");
+        MDC.remove("message_detail");
         MDC.remove("duration_in_sec");
         MDC.remove("duration_in_millis");
         MDC.remove("duration");
@@ -88,7 +91,7 @@ public class TelemetryService {
 
 
     public synchronized String eventPublicationRequested(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REQUESTED", null, null);
+        putInfoInMDC(event, "PUBLICATION_REQUESTED", null, null, null);
         String msg = "";
         try {
             msg = String.format("Event publication requested. Event is %s.", event);
@@ -108,7 +111,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationRejectedDueToMissingPublicationCode(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REJECTED_MISSING_PUBLICATION_CODE", null, null);
+        putInfoInMDC(event, "PUBLICATION_REJECTED", "MISSING_PUBLICATION_CODE", null, null);
         String msg = "";
         try {
             msg = String.format("Event publication rejected due to missing publication code. Event is %s.", event.toShortLog());
@@ -129,7 +132,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationRejectedDueToInvalidPublicationCode(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_PUBLICATION_CODE", null, null);
+        putInfoInMDC(event, "PUBLICATION_REJECTED", "INVALID_PUBLICATION_CODE", null, null);
         String msg = "";
         try {
             String publicationCode = event.getPublicationCode();
@@ -152,7 +155,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationRejectedDueToInactivePublication(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REJECTED_INACTIVE_PUBLICATION", null, null);
+        putInfoInMDC(event, "PUBLICATION_REJECTED", "INACTIVE_PUBLICATION", null, null);
         String msg = "";
         try {
             String publicationCode = event.getPublicationCode();
@@ -176,7 +179,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationRejectedDueToInvalidAuthClientId(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_AUTH_CLIENT_ID", null, null);
+        putInfoInMDC(event, "PUBLICATION_REJECTED", "INVALID_AUTH_CLIENT_ID", null, null);
         String msg = "";
         try {
             String authClientId = event.getAuthClientId();
@@ -199,7 +202,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationRejectedDueToInvalidEventTypeCode(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REJECTED_INVALID_EVENT_TYPE_CODE", null, null);
+        putInfoInMDC(event, "PUBLICATION_REJECTED", "INVALID_EVENT_TYPE_CODE", null, null);
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -222,7 +225,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationRejectedDueToInactiveEventType(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_REJECTED_INACTIVE_EVENT_TYPE", null, null);
+        putInfoInMDC(event, "PUBLICATION_REJECTED", "INACTIVE_EVENT_TYPE", null, null);
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -246,7 +249,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationAttempted(InflightEvent event) {
-        putInfoInMDC(event, "PUBLICATION_ATTEMPTED", null, null);
+        putInfoInMDC(event, "PUBLICATION_ATTEMPTED", null, null, null);
         String msg = "";
         try {
             msg = String.format("Event publication attempted. Event is %s.", event);
@@ -278,7 +281,7 @@ public class TelemetryService {
     public synchronized String eventPublicationSucceeded(InflightEvent event, Instant publicationStart) {
         Instant publicationEnd = Instant.now();
         Long durationInMillis = publicationStart != null ? Duration.between(publicationStart, publicationEnd).toMillis() : null;
-        putInfoInMDC(event, "PUBLICATION_SUCCEEDED", durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "PUBLICATION_SUCCEEDED", null, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Event publication succeeded. Event is %s.", event.toShortLog());
@@ -314,7 +317,7 @@ public class TelemetryService {
     public synchronized String eventPublicationFailed(InflightEvent event, Exception exception, Instant publicationStart) {
         Instant publicationEnd = Instant.now();
         Long durationInMillis = publicationStart != null ? Duration.between(publicationStart, publicationEnd).toMillis() : null;
-        putInfoInMDC(event, "PUBLICATION_FAILED", durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "PUBLICATION_FAILED", null, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Event publication failed. Exception is `%s`. Event is %s.",
@@ -349,7 +352,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventPublicationFailedForMirroring(InflightEvent event, Exception exception) {
-        putInfoInMDC(event, "PUBLICATION_FAILED_MIRRORING", null, null);
+        putInfoInMDC(event, "PUBLICATION_FAILED_MIRRORING", null, null, null);
         String msg = "";
         try {
             msg = String.format("Event publication failed for mirroring. Exception is `%s`. Event is %s.",
@@ -377,7 +380,7 @@ public class TelemetryService {
 
 
     public synchronized String eventDeliveryRequested(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_REQUESTED", null, null);
+        putInfoInMDC(event, "DELIVERY_REQUESTED", null, null, null);
         String msg = "";
         try {
             msg = String.format("Event delivery requested. Event is %s.", event);
@@ -400,7 +403,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToExpiredEvent(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_EXPIRED_EVENT", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "EXPIRED_EVENT", null, null);
         String msg = "";
         try {
             msg = String.format("Event delivery aborted due to expired event. Event is %s.", event.toShortLog());
@@ -426,7 +429,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToInactiveEventProcessing(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_INACTIVE_EVENT_PROCESSING", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "INACTIVE_EVENT_PROCESSING", null, null);
         String msg = "";
         try {
             msg = String.format("Event delivery aborted due to inactive event processing. Event is %s.", event.toShortLog());
@@ -452,7 +455,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToInvalidSubscriptionCode(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_INVALID_SUBSCRIPTION_CODE", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "INVALID_SUBSCRIPTION_CODE", null, null);
         String msg = "";
         try {
             String subscriptionCode = event.getSubscriptionCode();
@@ -479,7 +482,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToInactiveSubscription(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_INACTIVE_SUBSCRIPTION", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "INACTIVE_SUBSCRIPTION", null, null);
         String msg = "";
         try {
             String subscriptionCode = event.getSubscriptionCode();
@@ -506,7 +509,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToInvalidEventTypeCode(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_INVALID_EVENT_TYPE_CODE", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "INVALID_EVENT_TYPE_CODE", null, null);
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -533,7 +536,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToInactiveEventType(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_INACTIVE_EVENT_TYPE", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "INACTIVE_EVENT_TYPE", null, null);
         String msg = "";
         try {
             String eventTypeCode = event.getEventTypeCode();
@@ -560,7 +563,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAbortedDueToNotMatchingChannel(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ABORTED_NOT_MATCHING_CHANNEL", null, null);
+        putInfoInMDC(event, "DELIVERY_ABORTED", "NOT_MATCHING_CHANNEL", null, null);
         String msg = "";
         try {
             String channel = event.getChannel();
@@ -587,7 +590,7 @@ public class TelemetryService {
     }
 
     public synchronized String eventDeliveryAttempted(InflightEvent event) {
-        putInfoInMDC(event, "DELIVERY_ATTEMPTED", null, null);
+        putInfoInMDC(event, "DELIVERY_ATTEMPTED", null, null, null);
         String msg = "";
         try {
             msg = String.format("Event delivery attempted. Event is %s.", event);
@@ -612,7 +615,7 @@ public class TelemetryService {
     public synchronized String eventDeliverySucceeded(InflightEvent event, Instant deliveryStart) {
         Instant deliveryEnd = Instant.now();
         Long durationInMillis = deliveryStart != null ? Duration.between(deliveryStart, deliveryEnd).toMillis() : null;
-        putInfoInMDC(event, "DELIVERY_SUCCEEDED", durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "DELIVERY_SUCCEEDED", null, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Event delivery succeeded. Event is %s.", event.toShortLog());
@@ -642,7 +645,7 @@ public class TelemetryService {
     public synchronized String eventDeliveryFailed(InflightEvent event, Exception exception, Instant deliveryStart) {
         Instant deliveryEnd = Instant.now();
         Long durationInMillis = deliveryStart != null ? Duration.between(deliveryStart, deliveryEnd).toMillis() : null;
-        putInfoInMDC(event, "DELIVERY_FAILED", durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "DELIVERY_FAILED", null, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Event delivery failed. Exception is `%s`. Event is %s.",
