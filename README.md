@@ -997,3 +997,81 @@ curl --request DELETE http://localhost:8087/subscriptions/NominalTest-SUB1/event
 curl --request DELETE http://localhost:8087/subscriptions/NominalTest-SUB1/events
 curl http://localhost:8087/subscriptions/NominalTest-SUB1/rabbitmq/queue/info
 ```
+
+
+## Kibana
+
+To convert `duration`, `duration_in_sec` and `duration_in_millis` from String to Long, use scripted fileds in Kibana:
+
+```
+if (doc['duration_in_millis.keyword'].empty) {
+  return 0
+} else {
+  return Long.parseLong(doc['duration_in_millis.keyword'].value);
+}
+```
+
+
+### Visualization Probe - Publication Status (Pie)
+
+```
+Type: Pie
+Metrics: 
+- Slice size: Aggregation: Count
+Buckets: 
+- Split spice: Aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_PUBLICATION_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_PUBLICATION_FAILED
+```
+
+
+### Visualization Probe - Round trip Status (Pie)
+```
+Type: Pie
+Metrics: 
+- Slice size: Aggregation: Count
+Buckets: 
+- Split spice: Aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_FAILED
+```
+
+
+### Visualization Probe - Delivery Status over time (Vertical bars)
+
+```
+Type: Vertical bars
+Metrics: 
+- Y-axis: Aggregation: Count
+Buckets:
+- X-axis: Aggregation: Date Histogram; Field: @Timestamp
+- Split series: Sub-aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_FAILED
+```
+
+
+### Visualization Probe - Durations (Vertical bars)
+
+```
+Type: Vertical bars
+Metrics: 
+- Y-axis: Aggregation: Count
+Buckets:
+- X-axis: Aggregation: Range; Field: duration_in_millis_as_numeric
+  - Ranges: 0-100, 100-200, 200-300, 300-400, 400-500, 500-1000, 1000-2000, 2000-3000, 3000-4000, 4000-5000, 5000-10000, 10000-infini
+- Split series: Sub-aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_FAILED
+```
+
+  
+  
