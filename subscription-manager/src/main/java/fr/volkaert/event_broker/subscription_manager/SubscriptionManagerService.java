@@ -236,7 +236,10 @@ public class SubscriptionManagerService {
             try {
                 inflightEvent = callSubscriptionAdapter(inflightEvent);
             } catch (Exception ex) {
-                telemetryService.eventDeliveryFailed(inflightEvent, ex, deliveryStart);
+                if (ex instanceof  BrokerException)
+                    telemetryService.eventDeliveryFailed(inflightEvent, ex, deliveryStart, "SUBSCRIPTION_ADAPTER_CALL_ERROR_" + ((BrokerException)ex).getHttpStatusCode());
+                else
+                    telemetryService.eventDeliveryFailed(inflightEvent, ex, deliveryStart, "SUBSCRIPTION_ADAPTER_CALL_ERROR");
                 LOGGER.warn("RabbitMQ consumer will be destroyed because an exception was raised while calling the Subscription Adapter. Event is {}.",
                         inflightEvent.toShortLog());
                 destroyRabbitMQConsumerForTheSubscription(subscriptionCode);
@@ -253,7 +256,7 @@ public class SubscriptionManagerService {
             }
 
             if (! (inflightEvent.getWebhookHttpStatus() >= 200 && inflightEvent.getWebhookHttpStatus() < 300)) {
-                telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart);
+                telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart, "WEBHOOK_RETURNED_STATUS_" + inflightEvent.getWebhookHttpStatus());
                 LOGGER.warn("RabbitMQ consumer will be destroyed because the webhook returned the unsuccessful http status {}. Event is {}.",
                         inflightEvent.getWebhookHttpStatus(), inflightEvent.toShortLog());
                 destroyRabbitMQConsumerForTheSubscription(subscriptionCode);
@@ -270,7 +273,7 @@ public class SubscriptionManagerService {
             LOGGER.error("Unexpected error while handling RabbitMQ message. Event is {}",
                     (inflightEvent != null ? inflightEvent.toShortLog() : "null"), ex);
             if (inflightEvent != null) {
-                telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart);
+                telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart, "UNEXPECTED_ERROR");
             }
             LOGGER.warn("RabbitMQ consumer will be destroyed because an unexpected error occurred while handling RabbitMQ message. Event is {}.",
                     (inflightEvent != null ? inflightEvent.toShortLog() : "null"));
@@ -335,24 +338,28 @@ public class SubscriptionManagerService {
     private void handleWebhookErrorOccurred(InflightEvent inflightEvent,
                                             Instant deliveryStart, Subscription subscription,
                                             Message rabbitMQMessage, Channel rabbitMQChannel) {
-        telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart);
+
+        String failureReason = null;
 
         boolean eventExpiredDueToTimeToLiveForWebhookError = false;
         String eventExpirationReason = null;
 
         if (inflightEvent.isWebhookConnectionErrorOccurred()) {
+            failureReason = "WEBHOOK_CONNECTION_ERROR";
             eventExpiredDueToTimeToLiveForWebhookError = isEventExpiredDueToTimeToLiveForWebhookError(inflightEvent, deliveryStart,
                     config.getDefaultTimeToLiveInSecondsForWebhookConnectionError(),
                     subscription.getTimeToLiveInSecondsForWebhookConnectionError());
             eventExpirationReason = "connection";
         }
         else if (inflightEvent.isWebhookReadTimeoutErrorOccurred()) {
+            failureReason = "WEBHOOK_READ_TIMEOUT_ERROR";
             eventExpiredDueToTimeToLiveForWebhookError = isEventExpiredDueToTimeToLiveForWebhookError(inflightEvent, deliveryStart,
                     config.getDefaultTimeToLiveInSecondsForWebhookReadTimeoutError(),
                     subscription.getTimeToLiveInSecondsForWebhookReadTimeoutError());
             eventExpirationReason = "read timeout";
         }
         else if (inflightEvent.isWebhookServer5xxErrorOccurred()) {
+            failureReason = "WEBHOOK_SERVER_5XX_ERROR";
             eventExpiredDueToTimeToLiveForWebhookError = isEventExpiredDueToTimeToLiveForWebhookError(inflightEvent, deliveryStart,
                     config.getDefaultTimeToLiveInSecondsForWebhookServer5xxError(),
                     subscription.getTimeToLiveInSecondsForWebhookServer5xxError());
@@ -361,18 +368,22 @@ public class SubscriptionManagerService {
         else if (inflightEvent.isWebhookClient4xxErrorOccurred()) {
             if (inflightEvent.getWebhookHttpStatus() == HttpStatus.UNAUTHORIZED.value() ||
                     inflightEvent.getWebhookHttpStatus() == HttpStatus.FORBIDDEN.value()) {
+                failureReason = "WEBHOOK_AUTH_ERROR";
                 eventExpiredDueToTimeToLiveForWebhookError = isEventExpiredDueToTimeToLiveForWebhookError(inflightEvent, deliveryStart,
                         config.getDefaultTimeToLiveInSecondsForWebhookAuth401Or403Error(),
                         subscription.getTimeToLiveInSecondsForWebhookAuth401Or403Error());
                 eventExpirationReason = "auth 401 or 403";
             }
             else {
+                failureReason = "WEBHOOK_CLIENT_4xx_ERROR";
                 eventExpiredDueToTimeToLiveForWebhookError = isEventExpiredDueToTimeToLiveForWebhookError(inflightEvent, deliveryStart,
                         config.getDefaultTimeToLiveInSecondsForWebhookClient4xxError(),
                         subscription.getTimeToLiveInSecondsForWebhookClient4xxError());
                 eventExpirationReason = "client 4xx";
             }
         }
+
+        telemetryService.eventDeliveryFailed(inflightEvent, null, deliveryStart, failureReason);
 
         if (eventExpiredDueToTimeToLiveForWebhookError) {
             LOGGER.warn("Event expired before delivery due to time to live expiration because of a webhook {} error. Event is {}.",
