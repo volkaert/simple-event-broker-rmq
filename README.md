@@ -1041,7 +1041,23 @@ Buckets:
 ```
 
 
-### Visualization Probe - Delivery Status over time (Vertical bars)
+### Visualization Probe - Publication Status over time (Vertical bars)
+
+```
+Type: Vertical bars
+Metrics: 
+- Y-axis: Aggregation: Count
+Buckets:
+- X-axis: Aggregation: Date Histogram; Field: @Timestamp
+- Split series: Sub-aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_PUBLICATION_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_PUBLICATION_FAILED
+```
+
+
+### Visualization Probe - Round trip Status over time (Vertical bars)
 
 ```
 Type: Vertical bars
@@ -1073,5 +1089,62 @@ Buckets:
       message_code: PROBE_FAILED
 ```
 
+
+### Visualization Probe - Publications attempted (Metric)
+
+```
+Type: Metric
+Metrics: 
+- Metric: Aggregation: Count
+Buckets:
+- Split group: Aggregation: Filters
+  - Filter 1: Publications attempted
+      message_code: PROBE_PUBLICATION_ATTEMPTED
+```
+
+
+### Visualization Probe - Probes received (Metric)
+
+```
+Type: Metric
+Metrics: 
+- Metric: Aggregation: Count
+Buckets:
+- Split group: Aggregation: Filters
+  - Filter 1: Publications attempted
+      message_code: PROBE_RECEIVED
+```
+
+
+### Visualization Probe - Round trip Durations over time (Lines)
+
+```
+Type: Lines
+Metrics: 
+- Y-Axis: Agregation: Average; Field: duration_in_millis_as_numeric
+Buckets:
+- X-axis: Aggregation: Date Histogram; Field: @Timestamp
+- Split series: Sub-aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_FAILED
+```
+
+
+### Visualization Probe - Publication Durations over time (Lines)
+
+```
+Type: Lines
+Metrics: 
+- Y-Axis: Agregation: Average; Field: duration_in_millis_as_numeric
+Buckets:
+- X-axis: Aggregation: Date Histogram; Field: @Timestamp
+- Split series: Sub-aggregation: Filters
+  - Filter 1: Success
+      message_code: PROBE_PUBLICATION_SUCCEEDED
+  - Filter 2: Failure
+      message_code: PROBE_PUBLICATIONFAILED
+```
   
   
