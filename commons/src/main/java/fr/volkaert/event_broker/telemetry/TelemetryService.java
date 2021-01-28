@@ -642,10 +642,10 @@ public class TelemetryService {
         return msg;
     }
 
-    public synchronized String eventDeliveryFailed(InflightEvent event, Exception exception, Instant deliveryStart) {
+    public synchronized String eventDeliveryFailed(InflightEvent event, Exception exception, Instant deliveryStart, String failureReason) {
         Instant deliveryEnd = Instant.now();
         Long durationInMillis = deliveryStart != null ? Duration.between(deliveryStart, deliveryEnd).toMillis() : null;
-        putInfoInMDC(event, "DELIVERY_FAILED", null, durationInMillis, TimeUnit.MILLISECONDS);
+        putInfoInMDC(event, "DELIVERY_FAILED", failureReason, durationInMillis, TimeUnit.MILLISECONDS);
         String msg = "";
         try {
             msg = String.format("Event delivery failed. Exception is `%s`. Event is %s.",
